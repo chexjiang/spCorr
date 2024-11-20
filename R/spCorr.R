@@ -1,23 +1,22 @@
 library(mgcv)
+library(parallel)
+library(ggplot2)
 library(MASS)
 library(dplyr)
+library(patchwork)
 library(tidyr)
 library(tibble)
 library(purrr)
-library(parallel)
-library(ggplot2)
-library(patchwork)
 
 
-
-source('mgcv_modified.R')
-source('construct_smoother.R')
-source('quasiproductr.R')
-source('fit_marginals.R')
-source('fit_products.R')
-source('test_models.R')
-source('summary.R')
-source('plot_helper.R')
+# source('mgcv_modified.R')
+# source('construct_smoother.R')
+# source('quasiproductr.R')
+# source('fit_marginals.R')
+# source('fit_products.R')
+# source('test_models.R')
+# source('summary.R')
+# source('plot_helper.R')
 
 spCorr <- function(count_mat,
                    gene_list,
@@ -29,13 +28,17 @@ spCorr <- function(count_mat,
                    family2 = quasiproductr(),
                    DT = TRUE,
                    return_models = FALSE,
-                   ncores = 4,
+                   ncores = 2,
                    control = list(),
                    seed = 123,
                    local_testing = FALSE,
                    preconstruct_smoother = TRUE){
 
   set.seed(seed)
+
+  # Re-assign the namespace of the defined function
+  assignInNamespace("fix.family.link.family", fix.family.link.family, ns = "mgcv")
+  assignInNamespace("fix.family.var", fix.family.var, ns = "mgcv")
 
   # Fit marginal to gene_list
   message("Start Marginal Fitting for ", length(gene_list), " genes")

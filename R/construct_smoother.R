@@ -1,13 +1,14 @@
-#### Pre-construction of the 2-dim cached smoother
-
+#### Pre-construction of the 2-dim cached smoother ####
 
 #### tp ####
+#' @importFrom mgcv smooth.construct.tp.smooth.spec Predict.matrix.tp.smooth
+#' @export
 smooth.construct.tpcached.smooth.spec <- function(object, data, knots) {
   if (exists("tpcached_smoother", envir = smoother_env)) {
     smooth_object <- get("tpcached_smoother", envir = smoother_env)
-    #message("Extractting tpcached smoother")
+    message("Extracting tpcached smoother")
   } else {
-    object$bs <- "tp"  
+    object$bs <- "tp"
     smooth_object <- smooth.construct.tp.smooth.spec(object, data, knots)
     assign("tpcached_smoother", smooth_object, envir = smoother_env)
     message("Constructing tpcached smoother")
@@ -15,22 +16,23 @@ smooth.construct.tpcached.smooth.spec <- function(object, data, knots) {
   return(smooth_object)
 }
 
-
+#' @importFrom mgcv Predict.matrix.tp.smooth
+#' @export
 # Prediction matrix function for the custom smoother
 Predict.matrix.tpcached.smooth <- function(object, data) {
   # Use the Predict.matrix function of the underlying smoother
   Predict.matrix.tp.smooth(object, data)
 }
 
-
-
 #### gp ####
+#' @importFrom mgcv smooth.construct.tp.smooth.spec Predict.matrix.gp.smooth
+#' @export
 smooth.construct.gpcached.smooth.spec <- function(object, data, knots) {
   if (exists("gpcached_smoother", envir = smoother_env)) {
     smooth_object <- get("gpcached_smoother", envir = smoother_env)
-    #message("Extracting gpcached smoother")
+    message("Extracting gpcached smoother")
   } else {
-    object$bs <- "gp"  
+    object$bs <- "gp"
     smooth_object <- smooth.construct.tp.smooth.spec(object, data, knots)
     assign("gpcached_smoother", smooth_object, envir = smoother_env)
     message("Constructing gpcached smoother")
@@ -38,6 +40,8 @@ smooth.construct.gpcached.smooth.spec <- function(object, data, knots) {
   return(smooth_object)
 }
 
+#' @importFrom mgcv Predict.matrix.gp.smooth
+#' @export
 # Prediction matrix function for the custom smoother
 Predict.matrix.gpcached.smooth <- function(object, data) {
   # Use the Predict.matrix function of the underlying smoother
