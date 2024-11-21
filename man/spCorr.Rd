@@ -63,7 +63,7 @@ A list containing:
 }
 }
 \description{
-This function fits conditional margins and product distributions for a given list of genes and gene pairs using GAM-based models.
+This function fits conditional margins and models local correlation for a given list of genes and gene pairs using GAM-based models.
 It also performs statistical testing to identify significant patterns in gene co-expression.
 }
 \examples{
