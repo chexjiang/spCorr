@@ -68,9 +68,10 @@ spCorr <- function(count_mat,
                    local_testing = FALSE,
                    preconstruct_smoother = TRUE){
 
+  # Set reproducibility seed
   set.seed(seed)
 
-  # Fit marginal to gene_list
+  # Fit conditional margins to gene_list
   message("Start Marginal Fitting for ", length(gene_list), " genes")
   marginals <- fit_marginals(gene_list = gene_list,
                              count_mat = count_mat,
@@ -82,7 +83,7 @@ spCorr <- function(count_mat,
                              ncores = ncores)
 
 
-  # Fit product to gene_pair_list
+  # Fit product distributions to gene_pair_list
   message("Start Product Fitting for ", nrow(gene_pair_list), " gene pairs")
   #smoother_env <- new.env()
   model_list <- fit_products(gene_pair_list = gene_pair_list,
@@ -95,19 +96,16 @@ spCorr <- function(count_mat,
                              preconstruct_smoother = preconstruct_smoother)
 
   # Extract the gene expression list
-  gene_pair_expr_list <- lapply(1:nrow(gene_pair_list), function(i) {
+  gene_pair_expr_list <- lapply(seq_len(nrow(gene_pair_list)), function(i) {
     # Extract the expressions for the gene pair
     y1 <- count_mat[gene_pair_list[i, 1], ]
     y2 <- count_mat[gene_pair_list[i, 2], ]
-
-    # Combine with cov_mat
-    gene_pair_expr <- cbind(y1=y1, y2=y2)
-    gene_pair_expr
+    cbind(y1 = y1, y2 = y2)
   })
   names(gene_pair_expr_list) <- row.names(gene_pair_list)
 
 
-  # Testing for gene_pair_list
+  # Perform testing for gene_pair_list
   message("Start Testing for ", nrow(gene_pair_list), " gene pairs")
   test_res <- test_models(model_list, ncores, local_testing)
 

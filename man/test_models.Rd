@@ -4,7 +4,7 @@
 \alias{test_models}
 \title{Testing function for a list of models}
 \usage{
-test_models(model_list, ncores = ncores, local_testing = local_testing)
+test_models(model_list, ncores = 2, local_testing = FALSE)
 }
 \arguments{
 \item{model_list}{A list of fitted Generalized Additive Model (GAM) objects to be tested.}

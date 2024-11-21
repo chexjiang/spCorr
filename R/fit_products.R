@@ -50,12 +50,13 @@ fit_products <- function(gene_pair_list,
                          control = list(),
                          ncores = ncores,
                          preconstruct_smoother = TRUE) {
-
+  
+  # Split gene pair list into individual rows
   gene_pair_list_name <- row.names(gene_pair_list)
   gene_pair_list_split <- split(gene_pair_list, seq(nrow(gene_pair_list)))
   names(gene_pair_list_split) <- gene_pair_list_name
 
-
+  # Fit models for each gene pair in parallel
   model_list <- parallel::mclapply(gene_pair_list_split, function(gene_pair) {
     fit_product(gene_pair = gene_pair,
                 marginals = marginals,
@@ -79,41 +80,37 @@ fit_product <- function(gene_pair,
                         preconstruct_smoother = TRUE){
 
 
-  # Extract the standardized expressions
+  # Extract standardized expressions for the gene pair
   gene_pair <- unlist(gene_pair)
   gj <- marginals[gene_pair[1],]
   gk <- marginals[gene_pair[2],]
 
-  # Model the product distribution
+  # Compute product of expressions
   z <- gj*gk
   dat <- cbind(z, cov_mat)
 
   # Create the formula
   #mgcv_formula <- stats::reformulate(formula2, response = "z")
 
-  if(preconstruct_smoother){
-    # Original formula with the response variable
+    
+  # Modify formula based on preconstruct_smoother
+  if (preconstruct_smoother) {
     bs_type <- sub(".*bs='(.*?)'.*", "\\1", formula2)
-
-    # Modify the formula based on bs_type
     if (bs_type == "tp") {
-      formula2_cached <- gsub("bs='tp'", "bs='tpcached'", formula2)
+      formula2 <- gsub("bs='tp'", "bs='tpcached'", formula2)
     } else if (bs_type == "gp") {
-      formula2_cached <- gsub("bs='gp'", "bs='gpcached'", formula2)
+      formula2 <- gsub("bs='gp'", "bs='gpcached'", formula2)
     } else {
-      stop("bs must be either 'tp' or 'gp'.")
+      stop("Invalid bs type in formula. Must be 'tp' or 'gp'.")
     }
-    mgcv_formula <- as.formula(paste("z ~", formula2_cached))
-  }else{
-    mgcv_formula <- as.formula(paste("z ~", formula2))
   }
+  
+  mgcv_formula <- as.formula(paste("z ~", formula2))
 
-
-  # Fit the model
+  # Fit the GAM model
   model <- suppressWarnings({
-    mgcv::gam(formula = mgcv_formula, family = family2,
-              data = dat, control = control)
+    mgcv::gam(formula = mgcv_formula, family = family2, data = dat, control = control)
   })
 
-  model
+  return(model)
 }

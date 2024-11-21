@@ -13,13 +13,7 @@ quasiproductr(link = "artanh")
 A family object compatible with mgcv, including variance, link functions, and residual deviance calculation.
 }
 \description{
-The \code{quasiproductr} family is a custom family added to the \code{mgcv} package to model
-relationships where the link function is the hyperbolic arctangent (\code{artanh}).
-This family includes functions to define the link, variance, residuals, and
-initialization logic required for fitting with Generalized Additive Models (GAM).
-}
-\examples{
-# Example of using quasiproductr with mgcv's gam function
-library(mgcv)
-fit <- gam(y ~ s(x), family = quasiproductr(), data = my_data)
+The \code{quasiproductr} family models relationships where the link function is the
+hyperbolic arctangent (\code{artanh}). This family defines custom link, variance,
+residual, and initialization functions for use with Generalized Additive Models (GAM).
 }

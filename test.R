@@ -1,3 +1,6 @@
+library(spCorr)
+data(test_data)
+
 time1 <- Sys.time()
 model_list <- spCorr(count_mat = test_data$count_mat,
                      gene_list = test_data$gene_list,

@@ -33,45 +33,25 @@ fit_marginals(
 
 \item{epsilon}{A small number to avoid boundary values during transformation. Default is \code{1e-6}.}
 
-\item{ncores}{The number of cores to use for parallel processing.}
-
-\item{model_list}{A list of fitted GAM model objects to be tested.}
-
-\item{local_testing}{Logical; whether to perform local significance testing for each model. Default is \code{FALSE}.}
+\item{ncores}{The number of CPU cores to use for parallel processing. Default is the number of available cores.}
 }
 \value{
 A matrix where each row represents the transformed values for a gene.
-
-A list containing test results for each model in the input \code{model_list}.
-Each element contains global test results (\code{global_p} and \code{edf}) and local test results.
 }
 \description{
 This function applies marginal fitting and transforms each gene's expression to follow a standard Gaussian distribution.
 }
 \examples{
 data(test_data)
-# Fit standardized marginals for gene expressions
 marginals <- fit_marginals(
   gene_list = test_data$gene_list,
   count_mat = test_data$count_mat,
   cov_mat = test_data$cov_mat,
-  formula1 = "~ covariate",
+  formula1 = "layer_annotations",
   family1 = "nb",
   to = "gaussian",
   DT = TRUE,
+  epsilon = 1e-6,
   ncores = 2
 )
-
-# Fit product distributions for gene pairs
-model_list <- fit_products(
-  gene_pair_list = test_data$gene_pair_list,
-  marginals = marginals,
-  cov_mat = test_data$cov_mat,
-  formula2 = "s(x1, x2, bs='tp', k=50)",
-  family2 = quasiproductr(),
-  control = list(),
-  ncores = 2,
-  preconstruct_smoother = TRUE
-)
-
 }

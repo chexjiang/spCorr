@@ -21,7 +21,11 @@ plot_local <- function(res_list,
                        area_id=NULL,   # annotation values (categorical)
                        plot_type='all',
                        cov=NULL){
-
+  
+  # Validate inputs
+  stopifnot(name %in% names(res_list$gene_expr))
+  stopifnot(plot_type %in% c("rho", "all", "pval"))
+  
   if(is.null(cov)){
     cov <- res_list$cov_mat
   }
@@ -30,18 +34,23 @@ plot_local <- function(res_list,
   res <- res_list$test_res[[name]]
 
 
+  # Subset based on area_name and area_id
   plot_id <- rep(TRUE, n)
-  if(!is.null(area_name)){
-    # subset area
-    area_list <- res_list$gene_expr[[name]][,area_name]
-    plot_id_false <- which(!area_list %in% area_id)
-    plot_id[plot_id_false] <- FALSE
+  if (!is.null(area_name)) {
+    stopifnot(area_name %in% colnames(res_list$gene_expr[[name]]))
+    area_list <- res_list$gene_expr[[name]][, area_name]
+    plot_id[!(area_list %in% area_id)] <- FALSE
   }
-
-
+  
+  
   if(plot_type=='rho'){
-    plot_dat <- data.frame(rho=res$local_test$fitted_rho, x1 = cov$x1, x2 = cov$x2, plot_id = plot_id)
-
+    # Plot local correlations
+    plot_dat <- data.frame(
+      rho = res$local_test$fitted_rho,
+      x1 = cov$x1,
+      x2 = cov$x2,
+      plot_id = plot_id
+    )
     plot <- plot_dat %>%
       ggplot(aes(x = x1, y = -x2, color = rho)) +
       geom_point(size = 1.1) +
@@ -57,12 +66,18 @@ plot_local <- function(res_list,
 
 
   }else if(plot_type=='all'){
+    # Plot both local correlations and expressions
     genes <- strsplit(name, "_")[[1]]
     gene_pair_expr <- res_list$gene_expr[[name]]
-    plot_dat <- data.frame(gene_pair_expr, x1 = cov$x1, x2 = cov$x2,
-                           rho=res$local_test$fitted_rho, plot_id = plot_id)
+    plot_dat <- data.frame(
+      gene_pair_expr,
+      x1 = cov$x1,
+      x2 = cov$x2,
+      rho = res$local_test$fitted_rho,
+      plot_id = plot_id
+    )
 
-    # Plot rho
+    # Correlation plot
     plot1 <- plot_dat %>%
       ggplot(aes(x = x1, y = -x2, color = ifelse(plot_id == TRUE, rho, NA))) +
       geom_point(size = 0.5) +
@@ -114,8 +129,14 @@ plot_local <- function(res_list,
 
 
   }else if(plot_type=='pval'){
-    rho_p <- ifelse(res$local_test$rho_p>0.05, NA, res$local_test$rho_p)
-    plot_dat <- data.frame(rho_p=-log1p(rho_p), x1 = cov$x1, x2 = cov$x2, plot_id = plot_id)
+    # Plot local p-values
+    rho_p <- ifelse(res$local_test$rho_p > 0.05, NA, res$local_test$rho_p)
+    plot_dat <- data.frame(
+      rho_p = -log1p(rho_p),
+      x1 = cov$x1,
+      x2 = cov$x2,
+      plot_id = plot_id
+    )
 
     plot <- plot_dat %>%
       ggplot(aes(x = x1, y = -x2, color = ifelse(plot_id == TRUE, rho_p, NA))) +
