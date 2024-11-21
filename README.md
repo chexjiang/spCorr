@@ -2,7 +2,10 @@
 
 **spCorr** models spatially variable gene co-expression patterns in spatial transcriptomics.
 
----
+
+## Overview
+![spCorr Overview](fig/fig1.png)
+
 
 ## Installation<a name="installation-"></a>
 
