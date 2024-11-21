@@ -48,6 +48,8 @@ The parameters of `spCorr()` are:
 - `cov_mat`: A matrix of covariates, including spatial coordinates and any confounders.
 
 - `formula1`: A formula specifying the model to be used for fitting the marginal distributions.  
+    - If no confounder needs to be removed, set `formula1 = "1"`.  
+    - If confounders need to be removed, specify `formula1 = "confounder_name"`, where `confounder_name` is the column name from `cov_mat` representing the confounder.
 
 - `family1`: The distribution family for marginals (e.g., `'gaussian'`, `'poisson'`, `'nb'`).  
 
@@ -60,7 +62,7 @@ The parameters of `spCorr()` are:
 
 - `return_models`: Boolean indicating whether to return the model objects along with results. Default is `FALSE`.
 
-- `ncores`: The number of cores for parallel processing. Default is 2. 
+- `ncores`: The number of cores for parallel processing. Default is `2`. 
 
 - `control`: A list of control parameters for the fitting functions.
 
