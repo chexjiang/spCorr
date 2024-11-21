@@ -1,5 +1,14 @@
 #### Re-define the fix.family.link.family and fix.family.var in mgcv ####
 
+#' Redefine fix.family.link.family to add derivatives to a family object
+#'
+#' This function adds the second, third, and fourth derivatives of the link function
+#' with respect to mu to the family object, which is used for Newton-like optimization.
+#'
+#' @param fam A family object for which to add derivatives.
+#' @return A modified family object with additional components for derivatives.
+#' @importFrom stats qnorm dnorm pnorm
+#' @importFrom mgcv fix.family.link
 #' @export
 fix.family.link.family <- function(fam)
   # adds d2link the second derivative of the link function w.r.t. mu
@@ -112,7 +121,7 @@ fix.family.link.family <- function(fam)
     fam$d2link <- function(mu) (lambda*(lambda-1)) * mu^{lambda-2}
     fam$d3link <- function(mu) (lambda*(lambda-1)*(lambda-2)) * mu^{lambda-3}
     fam$d4link <- function(mu) (lambda*(lambda-1)*(lambda-2)*(lambda-3)) * mu^{lambda-4}
-  } else if (link == "arctanh") { ## it's a power link
+  } else if (link == "artanh") { ## it's a power link
     ## note that lambda <=0 gives log link so don't end up here
     fam$d2link <- function(mu) {
       mu_plus <- 1/(1+mu)

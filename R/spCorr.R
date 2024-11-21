@@ -1,22 +1,56 @@
-library(mgcv)
-library(parallel)
-library(ggplot2)
-library(MASS)
-library(dplyr)
-library(patchwork)
-library(tidyr)
-library(tibble)
-library(purrr)
+# Create a new environment for caching smoothers
+smoother_env <- new.env()
 
+#' The wrapper for the whole spCorr pipeline
+#'
+#' This function fits conditional margins and product distributions for a given list of genes and gene pairs using GAM-based models.
+#' It also performs statistical testing to identify significant patterns in gene co-expression.
+#'
+#' @param count_mat A matrix of counts where rows represent genes and columns represent observations.
+#' @param gene_list A vector of gene names or indices for which the conditional margins are to be fit.
+#' @param gene_pair_list A data frame or matrix containing pairs of gene names (or indices) to be analyzed.
+#' @param cov_mat A matrix or data frame of covariates used for fitting.
+#' @param formula1 A formula object or string specifying the model for fitting the marginal distributions (e.g., `~ covariate`).
+#' @param family1 The distribution family for marginal fitting. Options include `'gaussian'`, `'poisson'`, or `'nb'`. Default is `'nb'`.
+#' @param formula2 A formula object or string specifying the model for fitting the product distributions (e.g., `s(x1, x2, bs='tp', k=50)`).
+#' @param family2 The distribution family for product fitting. Default is `quasiproductr()`.
+#' @param DT Logical. If `TRUE`, applies discrete transformation during margin fitting. Default is `TRUE`.
+#' @param return_models Logical. If `TRUE`, returns the fitted model objects along with results. Default is `FALSE`.
+#' @param ncores Integer. The number of cores to use for parallel processing. Default is `2`.
+#' @param control A list of control parameters passed to the fitting functions.
+#' @param seed Integer. Seed value for reproducibility. Default is `123`.
+#' @param local_testing Logical. If `TRUE`, performs local testing for each gene pair. Default is `FALSE`.
+#' @param preconstruct_smoother Logical. If `TRUE`, uses a cached smoother to speed up computations. Default is `TRUE`.
+#' @return A list containing:
+#' \describe{
+#'   \item{test_res}{A list of results from testing the fitted product distributions.}
+#'   \item{gene_expr}{A list of gene expression matrices for each gene pair.}
+#'   \item{cov_mat}{The covariate matrix used in the fitting.}
+#'   \item{model_list}{The fitted model objects, if `return_models = TRUE`.}
+#' }
+#' @examples
+#' data(test_data)
+#' result <- spCorr(
+#'   count_mat = test_data$count_mat,
+#'   gene_list = test_data$gene_list,
+#'   gene_pair_list = test_data$gene_pair_list,
+#'   cov_mat = test_data$cov_mat,
+#'   formula1 = "layer_annotations",
+#'   family1 = "nb",
+#'   formula2 = "s(x1, x2, bs='tp', k=50)",
+#'   family2 = quasiproductr(),
+#'   DT = TRUE,
+#'   return_models = FALSE,
+#'   ncores = 2,
+#'   control = list(),
+#'   seed = 123,
+#'   local_testing = FALSE,
+#'   preconstruct_smoother = TRUE
+#' )
+#' @importFrom mgcv gam
+#' @importFrom parallel mclapply
+#' @export
 
-# source('mgcv_modified.R')
-# source('construct_smoother.R')
-# source('quasiproductr.R')
-# source('fit_marginals.R')
-# source('fit_products.R')
-# source('test_models.R')
-# source('summary.R')
-# source('plot_helper.R')
 
 spCorr <- function(count_mat,
                    gene_list,
@@ -36,25 +70,21 @@ spCorr <- function(count_mat,
 
   set.seed(seed)
 
-  # Re-assign the namespace of the defined function
-  assignInNamespace("fix.family.link.family", fix.family.link.family, ns = "mgcv")
-  assignInNamespace("fix.family.var", fix.family.var, ns = "mgcv")
-
   # Fit marginal to gene_list
   message("Start Marginal Fitting for ", length(gene_list), " genes")
-  marginals <- covert_cond_marginals(gene_list = gene_list,
-                                     count_mat = count_mat,
-                                     cov_mat = cov_mat,
-                                     formula1 = formula1,
-                                     family = family1,
-                                     to = 'gaussian',
-                                     DT = DT,
-                                     ncores = ncores)
+  marginals <- fit_marginals(gene_list = gene_list,
+                             count_mat = count_mat,
+                             cov_mat = cov_mat,
+                             formula1 = formula1,
+                             family = family1,
+                             to = 'gaussian',
+                             DT = DT,
+                             ncores = ncores)
 
 
   # Fit product to gene_pair_list
   message("Start Product Fitting for ", nrow(gene_pair_list), " gene pairs")
-  smoother_env <- new.env()
+  #smoother_env <- new.env()
   model_list <- fit_products(gene_pair_list = gene_pair_list,
                              marginals = marginals,
                              cov_mat = cov_mat,
@@ -80,6 +110,8 @@ spCorr <- function(count_mat,
   # Testing for gene_pair_list
   message("Start Testing for ", nrow(gene_pair_list), " gene pairs")
   test_res <- test_models(model_list, ncores, local_testing)
+
+  message("Finished")
 
   if(return_models){
     return(list(test_res=test_res,

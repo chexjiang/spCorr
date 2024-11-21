@@ -5,7 +5,7 @@ test_that("spCorr function runs without error", {
     gene_list = test_data$gene_list,
     gene_pair_list = test_data$gene_pair_list,
     cov_mat = test_data$cov_mat,
-    formula1 = "1",
+    formula1 = "layer_annotations",
     family1 = 'nb',
     formula2 = "s(x1, x2, bs='tp', k=50)",
     family2 = quasiproductr(),
@@ -17,5 +17,5 @@ test_that("spCorr function runs without error", {
     local_testing = FALSE,
     preconstruct_smoother = TRUE
   )
-  expect_is(result, "list")  # Check that the result is a list
+  expect_type(result, "list")
 })
