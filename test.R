@@ -1,3 +1,8 @@
+library(devtools)
+devtools::build()
+devtools::install()
+
+
 library(spCorr)
 data(test_data)
 
@@ -19,6 +24,7 @@ model_list <- spCorr(count_mat = test_data$count_mat,
                      preconstruct_smoother = TRUE)
 time2 <- Sys.time()
 time2 - time1
+
 
 time1 <- Sys.time()
 model_list <- spCorr(count_mat = test_data$count_mat,

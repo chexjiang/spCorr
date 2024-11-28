@@ -1,6 +1,3 @@
-# Create a new environment for caching smoothers
-smoother_env <- new.env()
-
 #' The wrapper for the whole spCorr pipeline
 #'
 #' This function fits conditional margins and models local correlation for a given list of genes and gene pairs using GAM-based models.
@@ -70,6 +67,18 @@ spCorr <- function(count_mat,
 
   # Set reproducibility seed
   set.seed(seed)
+  
+  # Create the caching environment
+  .smoother_env <- new.env(parent = emptyenv())
+  # Temporarily assign to global environment
+  assign(".smoother_env", .smoother_env, envir = .GlobalEnv)
+  
+  on.exit({
+    # Clean up .smoother_env after spCorr finishes
+    rm(".smoother_env", envir = .GlobalEnv)
+  }, add = TRUE)
+  
+  
 
   # Fit conditional margins to gene_list
   message("Start Marginal Fitting for ", length(gene_list), " genes")
@@ -85,7 +94,8 @@ spCorr <- function(count_mat,
 
   # Fit product distributions to gene_pair_list
   message("Start Product Fitting for ", nrow(gene_pair_list), " gene pairs")
-  #smoother_env <- new.env()
+  
+  
   model_list <- fit_products(gene_pair_list = gene_pair_list,
                              marginals = marginals,
                              cov_mat = cov_mat,
@@ -94,6 +104,7 @@ spCorr <- function(count_mat,
                              control = control,
                              ncores = ncores,
                              preconstruct_smoother = preconstruct_smoother)
+
 
   # Extract the gene expression list
   gene_pair_expr_list <- lapply(seq_len(nrow(gene_pair_list)), function(i) {

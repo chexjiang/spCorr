@@ -4,13 +4,13 @@
 #' @importFrom mgcv Predict.matrix smooth.construct
 #' @export
 smooth.construct.tpcached.smooth.spec <- function(object, data, knots) {
-  if (exists("tpcached_smoother", envir = smoother_env)) {
-    smooth_object <- get("tpcached_smoother", envir = smoother_env)
+  if (exists("tpcached_smoother", envir = .smoother_env)) {
+    smooth_object <- get("tpcached_smoother", envir = .smoother_env)
     message("Extracting tpcached smoother")
   } else {
     object$bs <- "tp"
     smooth_object <- mgcv:::smooth.construct.tp.smooth.spec(object, data, knots)  # Use mgcv::: for internal function
-    assign("tpcached_smoother", smooth_object, envir = smoother_env)
+    assign("tpcached_smoother", smooth_object, envir = .smoother_env)
     message("Constructing tpcached smoother")
   }
   return(smooth_object)
@@ -26,13 +26,13 @@ Predict.matrix.tpcached.smooth <- function(object, data) {
 #### gp ####
 #' @export
 smooth.construct.gpcached.smooth.spec <- function(object, data, knots) {
-  if (exists("gpcached_smoother", envir = smoother_env)) {
-    smooth_object <- get("gpcached_smoother", envir = smoother_env)
+  if (exists("gpcached_smoother", envir = .smoother_env)) {
+    smooth_object <- get("gpcached_smoother", envir = .smoother_env)
     message("Extracting gpcached smoother")
   } else {
     object$bs <- "gp"
     smooth_object <- mgcv:::smooth.construct.tp.smooth.spec(object, data, knots)  # Use mgcv::: for internal function
-    assign("gpcached_smoother", smooth_object, envir = smoother_env)
+    assign("gpcached_smoother", smooth_object, envir = .smoother_env)
     message("Constructing gpcached smoother")
   }
   return(smooth_object)
