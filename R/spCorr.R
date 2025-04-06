@@ -11,7 +11,7 @@
 #'   \item Outputting statistical results and fitted values (or models).
 #' }
 #'
-#' @param count_mat A matrix of raw gene expression counts (genes × spots/cells).
+#' @param count_mat A matrix of raw gene expression counts (genes by spots/cells).
 #' @param gene_list A vector of gene names or row indices for which marginals will be fit.
 #' @param gene_pair_list A two-column data frame or matrix specifying gene pairs (by name or index).
 #' @param cov_mat A data frame of covariates used in both marginal and product fitting (must contain `x1` and `x2` for spatial coordinates).

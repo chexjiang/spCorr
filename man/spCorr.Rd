@@ -26,7 +26,7 @@ spCorr(
 )
 }
 \arguments{
-\item{count_mat}{A matrix of raw gene expression counts (genes × spots/cells).}
+\item{count_mat}{A matrix of raw gene expression counts (genes by spots/cells).}
 
 \item{gene_list}{A vector of gene names or row indices for which marginals will be fit.}
 
