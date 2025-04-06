@@ -4,7 +4,7 @@
 \alias{fix.family.link.family}
 \title{Redefine fix.family.link.family to add derivatives to a family object}
 \usage{
-\method{fix.family.link}{family}(fam)
+fix.family.link.family(fam)
 }
 \arguments{
 \item{fam}{A family object for which to add derivatives.}

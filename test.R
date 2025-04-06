@@ -1,3 +1,4 @@
+remove.packages("spCorr")
 unlink("man", recursive = TRUE)
 unlink("NAMESPACE")
 devtools::document()
