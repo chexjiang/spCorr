@@ -1,3 +1,6 @@
+unlink("man", recursive = TRUE)
+unlink("NAMESPACE")
+devtools::document()
 styler::style_pkg()
 devtools::document()
 devtools::build()
