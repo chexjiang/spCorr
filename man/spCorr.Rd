@@ -14,12 +14,15 @@ spCorr(
   formula2 = "s(x1, x2, bs='tp', k=50)",
   family2 = quasiproductr(),
   DT = TRUE,
-  return_models = FALSE,
+  global_test = "LRT",
   ncores = 2,
   control = list(),
+  epsilon = 1e-06,
   seed = 123,
-  local_testing = FALSE,
-  preconstruct_smoother = TRUE
+  preconstruct_smoother = TRUE,
+  return_models = FALSE,
+  return_coefs = FALSE,
+  check_morani = FALSE
 )
 }
 \arguments{
@@ -41,17 +44,17 @@ spCorr(
 
 \item{DT}{Logical. If \code{TRUE}, applies discrete transformation during margin fitting. Default is \code{TRUE}.}
 
-\item{return_models}{Logical. If \code{TRUE}, returns the fitted model objects along with results. Default is \code{FALSE}.}
-
 \item{ncores}{Integer. The number of cores to use for parallel processing. Default is \code{2}.}
 
 \item{control}{A list of control parameters passed to the fitting functions.}
 
 \item{seed}{Integer. Seed value for reproducibility. Default is \code{123}.}
 
-\item{local_testing}{Logical. If \code{TRUE}, performs local testing for each gene pair. Default is \code{FALSE}.}
-
 \item{preconstruct_smoother}{Logical. If \code{TRUE}, uses a cached smoother to speed up computations. Default is \code{TRUE}.}
+
+\item{return_models}{Logical. If \code{TRUE}, returns the fitted model objects along with results. Default is \code{FALSE}.}
+
+\item{local_testing}{Logical. If \code{TRUE}, performs local testing for each gene pair. Default is \code{FALSE}.}
 }
 \value{
 A list containing:

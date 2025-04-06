@@ -1,13 +1,13 @@
 #' Define a custom family called 'quasiproductr' to be used with the mgcv package.
 #'
-#' The `quasiproductr` family models relationships where the link function is the 
-#' hyperbolic arctangent (`artanh`). This family defines custom link, variance, 
+#' The `quasiproductr` family models relationships where the link function is the
+#' hyperbolic arctangent (`artanh`). This family defines custom link, variance,
 #' residual, and initialization functions for use with Generalized Additive Models (GAM).
 #'
 #' @param link The link function to be used. Default is `"artanh"`.
 #' @return A family object compatible with mgcv, including variance, link functions, and residual deviance calculation.
 #' @export
-quasiproductr <- function (link = "artanh"){
+quasiproductr <- function(link = "artanh") {
   if (link == "artanh") {
     linkfun <- function(mu) {
       mu <- pmin(pmax(mu, -0.9999), 0.9999)
@@ -35,29 +35,30 @@ quasiproductr <- function (link = "artanh"){
   dev.resids <- function(y, mu, wt) {
     -2 * wt * (y * (atan(mu) - atan(y)) - 0.5 * log((mu^2 + 1) / (y^2 + 1)))
   }
-  
+
   aic <- function(y, n, mu, wt, dev) NA
 
   initialize <- expression({
-    if (any(is.infinite(y)))
+    if (any(is.infinite(y))) {
       stop("'quasiproductr' family does not support infinite response values.")
+    }
     mustart <- tanh(y)
   })
-  
-  structure(list(family = "quasiproductr",
-                 link = name,
-                 linkfun = linkfun,
-                 linkinv = linkinv,
-                 variance = variance,
-                 dev.resids = dev.resids,
-                 aic = aic,
-                 mu.eta = mu.eta,
-                 initialize = initialize,
-                 validmu = validmu,
-                 valideta = valideta),
-            class = "family")
+
+  structure(
+    list(
+      family = "quasiproductr",
+      link = name,
+      linkfun = linkfun,
+      linkinv = linkinv,
+      variance = variance,
+      dev.resids = dev.resids,
+      aic = aic,
+      mu.eta = mu.eta,
+      initialize = initialize,
+      validmu = validmu,
+      valideta = valideta
+    ),
+    class = "family"
+  )
 }
-
-
-
-

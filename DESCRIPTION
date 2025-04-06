@@ -19,7 +19,8 @@ Imports:
     patchwork,
     purrr,
     tibble,
-    tidyr
+    tidyr,
+    ape
 Suggests: 
     testthat (>= 3.0.0),
     waldo (>= 0.2.2)

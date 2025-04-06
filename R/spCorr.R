@@ -54,83 +54,126 @@ spCorr <- function(count_mat,
                    gene_pair_list,
                    cov_mat,
                    formula1 = "1",
-                   family1 = 'nb',
+                   family1 = "nb",
                    formula2 = "s(x1, x2, bs='tp', k=50)",
                    family2 = quasiproductr(),
                    DT = TRUE,
-                   return_models = FALSE,
+                   global_test = "LRT",
                    ncores = 2,
                    control = list(),
+                   epsilon = 1e-6,
                    seed = 123,
-                   local_testing = FALSE,
-                   preconstruct_smoother = TRUE){
-
+                   preconstruct_smoother = TRUE,
+                   return_models = FALSE,
+                   return_coefs = FALSE,
+                   check_morani = FALSE) {
   # Set reproducibility seed
   set.seed(seed)
-  
+
   # Create the caching environment
   .smoother_env <- new.env(parent = emptyenv())
   # Temporarily assign to global environment
   assign(".smoother_env", .smoother_env, envir = .GlobalEnv)
-  
-  on.exit({
-    # Clean up .smoother_env after spCorr finishes
-    rm(".smoother_env", envir = .GlobalEnv)
-  }, add = TRUE)
-  
-  
 
-  # Fit conditional margins to gene_list
+  on.exit(
+    {
+      # Clean up .smoother_env after spCorr finishes
+      rm(".smoother_env", envir = .GlobalEnv)
+    },
+    add = TRUE
+  )
+
+  
+  ## Fit conditional margins to gene_list
   message("Start Marginal Fitting for ", length(gene_list), " genes")
-  marginals <- fit_marginals(gene_list = gene_list,
-                             count_mat = count_mat,
-                             cov_mat = cov_mat,
-                             formula1 = formula1,
-                             family = family1,
-                             to = 'gaussian',
-                             DT = DT,
-                             ncores = ncores)
+  marginal_res <- fit_marginals(
+    gene_list = gene_list,
+    count_mat = count_mat,
+    cov_mat = cov_mat,
+    formula1 = formula1,
+    family = family1,
+    DT = DT,
+    ncores = ncores
+  )
+  marginals <- marginal_res$marginal
+  residuals <- marginal_res$residual
 
 
-  # Fit product distributions to gene_pair_list
+  ## Check and subset spatially varying cross product
+  message("Start Extracting Spatially Varying Gene Pairs")
+  check_product_res <- check_products(
+    gene_pair_list = gene_pair_list,
+    marginals = marginals,
+    cov_mat = cov_mat,
+    check_morani = check_morani,
+    ncores = ncores
+  )
+  product_list <- check_product_res$product_list
+  gene_pair_list_subset <- check_product_res$gene_pair_list_subset
+
+
+
+  ## Fit product distributions to gene_pair_list_subset
   message("Start Product Fitting for ", nrow(gene_pair_list), " gene pairs")
-  
-  
-  model_list <- fit_products(gene_pair_list = gene_pair_list,
-                             marginals = marginals,
-                             cov_mat = cov_mat,
-                             formula2 = formula2,
-                             family2 = quasiproductr(),
-                             control = control,
-                             ncores = ncores,
-                             preconstruct_smoother = preconstruct_smoother)
+  product_res_list <- fit_products(
+    gene_pair_list_subset = gene_pair_list_subset,
+    product_list = product_list,
+    cov_mat = cov_mat,
+    formula2 = formula2,
+    family2 = quasiproductr(),
+    control = control,
+    ncores = ncores,
+    global_test = global_test,
+    return_models = return_models,
+    return_coefs = return_coefs,
+    preconstruct_smoother = preconstruct_smoother
+  )
+
+  ## Extract the global testing result
+  res_global <- do.call(rbind, lapply(product_res_list, function(x) {
+    tryCatch(x$res_global, error = function(e) NULL)
+  }))
+  if (!is.null(res_global) && length(res_global) > 0) {
+    res_global <- p.adjust(res_global, method = "fdr")
+  }
+
+  ## Extract local fitted values
+  res_local <- do.call(rbind, lapply(product_res_list, function(x) {
+    tryCatch(x$fitted_rho, error = function(e) NULL)
+  }))
+  colnames(res_local) <- row.names(cov_mat)
 
 
-  # Extract the gene expression list
-  gene_pair_expr_list <- lapply(seq_len(nrow(gene_pair_list)), function(i) {
-    # Extract the expressions for the gene pair
-    y1 <- count_mat[gene_pair_list[i, 1], ]
-    y2 <- count_mat[gene_pair_list[i, 2], ]
-    cbind(y1 = y1, y2 = y2)
-  })
-  names(gene_pair_expr_list) <- row.names(gene_pair_list)
+  ## Default is only return fitted values
+  if (return_models) {
+    # Model
+    model_list <- lapply(product_res_list, function(x) x$model)
+    return(list(
+      res_global = res_global,
+      res_local = res_local,
+      marginals = marginals,
+      residuals = residuals,
+      model_list = model_list
+    ))
+  } else if (return_coefs) {
+    # Model coef
+    model_coef_list <- lapply(product_res_list, function(x) {
+      tryCatch(x$model_coef, error = function(e) NULL)
+    })
 
-
-  # Perform testing for gene_pair_list
-  message("Start Testing for ", nrow(gene_pair_list), " gene pairs")
-  test_res <- test_models(model_list, ncores, local_testing)
-
-  message("Finished")
-
-  if(return_models){
-    return(list(test_res=test_res,
-                gene_expr=gene_pair_expr_list,
-                cov_mat=cov_mat,
-                model_list=model_list))
-  }else{
-    return(list(test_res=test_res,
-                gene_expr=gene_pair_expr_list,
-                cov_mat=cov_mat))
+    return(list(
+      res_global = res_global,
+      marginals = marginals,
+      residuals = residuals,
+      model_coef_list = model_coef_list
+    ))
+  } else {
+    # Fitted values
+    return(list(
+      res_global = res_global,
+      res_local = res_local,
+      residuals = residuals,
+      marginals = marginals
+    ))
   }
 }
-

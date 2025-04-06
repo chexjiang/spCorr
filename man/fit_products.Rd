@@ -5,35 +5,50 @@
 \title{Fit product distributions to standardized gene expressions for a list of gene pairs.}
 \usage{
 fit_products(
-  gene_pair_list,
-  marginals,
+  gene_pair_list_subset,
+  product_list,
   cov_mat,
   formula2,
   family2 = quasiproductr(),
   control = list(),
-  ncores = ncores,
-  preconstruct_smoother = TRUE
+  ncores,
+  global_test,
+  return_models = FALSE,
+  return_coefs = FALSE,
+  preconstruct_smoother = FALSE
 )
 }
 \arguments{
-\item{gene_pair_list}{A data frame or matrix where each row represents a gene pair to be modeled.}
+\item{gene_pair_list_subset}{A data frame or matrix of gene pairs that passed filtering (e.g., via Moran's I test).}
 
-\item{marginals}{A matrix containing standardized expression values for each gene.}
+\item{product_list}{A named list of product vectors corresponding to gene expression cross-products.}
 
-\item{cov_mat}{A matrix or data frame of covariates used in fitting the GAM models.}
+\item{cov_mat}{A matrix or data frame containing covariates (e.g., spatial coordinates like \code{x1}, \code{x2}).}
 
-\item{formula2}{A string or formula specifying the GAM structure for modeling the product distribution.}
+\item{formula2}{A formula or string specifying the GAM structure for modeling spatial interactions (e.g., \code{s(x1, x2)}).}
 
-\item{family2}{The distribution family used in fitting the model. Default is \code{quasiproductr()}.}
+\item{family2}{A distribution family to be used for model fitting. Default is \code{quasiproductr()}, which must be defined elsewhere.}
 
-\item{control}{A list of control parameters passed to the GAM fitting process.}
+\item{control}{A list of control parameters passed to \code{mgcv::gam()}.}
 
-\item{ncores}{An integer specifying the number of cores to use for parallel processing.}
+\item{ncores}{Number of cores to use for parallel processing with \code{mclapply}.}
 
-\item{preconstruct_smoother}{Logical; if \code{TRUE}, modifies the smoother to enable caching for faster computation. Default is \code{TRUE}.}
+\item{global_test}{Character string indicating the type of global test to perform. Options are \code{"LRT"} (likelihood ratio test) or \code{"t.test"}.}
+
+\item{return_models}{Logical; if \code{TRUE}, returns the full model object for each gene pair.}
+
+\item{return_coefs}{Logical; if \code{TRUE}, returns model coefficients and variance-covariance matrices.}
+
+\item{preconstruct_smoother}{Logical; if \code{TRUE}, modifies the smoother basis (e.g., \code{'tp'} to \code{'tpcached'}) for caching and speed optimization. Default is \code{FALSE}.}
 }
 \value{
-A list of fitted models, where each model corresponds to a gene pair from \code{gene_pair_list}.
+A list where each element corresponds to a gene pair. The contents depend on \code{return_models} and \code{return_coefs}:
+\describe{
+\item{res_global}{Result of the global test (either p-value or list with EDF and p-value).}
+\item{fitted_rho}{Fitted values from the GAM.}
+\item{model}{(Optional) Full \code{mgcv::gam} object, if \code{return_models = TRUE}.}
+\item{model_coef}{(Optional) List with \code{beta} (coefficients) and \code{beta_cov} (variance-covariance matrix), if \code{return_coefs = TRUE}.}
+}
 }
 \description{
 This function fits product distributions to gene pairs using their standardized expression values.
@@ -43,26 +58,38 @@ the joint effect while incorporating covariates.
 \examples{
 data(test_data)
 # Fit standardized marginals for gene expressions
-marginals <- fit_marginals(
+marginal_res <- fit_marginals(
   gene_list = test_data$gene_list,
   count_mat = test_data$count_mat,
   cov_mat = test_data$cov_mat,
   formula1 = "layer_annotations",
   family1 = "nb",
-  to = "gaussian",
   DT = TRUE,
+  epsilon = 1e-6,
   ncores = 2
 )
 
-# Fit product distributions for gene pairs
-model_list <- fit_products(
+# Compute gene pair products and optionally subset based on Moran's I
+check_result <- check_products(
   gene_pair_list = test_data$gene_pair_list,
-  marginals = marginals,
+  marginals = marginal_res$marginal,
+  cov_mat = test_data$cov_mat,
+  check_morani = FALSE,
+  ncores = 2
+)
+
+# Fit product distributions to gene_pair_list_subset
+model_list <- fit_products(
+  gene_pair_list_subset = check_result$gene_pair_list_subset,
+  product_list = check_result$product_list,
   cov_mat = test_data$cov_mat,
   formula2 = "s(x1, x2, bs='tp', k=50)",
   family2 = quasiproductr(),
   control = list(),
   ncores = 2,
+  global_test = "LRT",
+  return_models = FALSE,
+  return_coefs = FALSE,
   preconstruct_smoother = TRUE
 )
 

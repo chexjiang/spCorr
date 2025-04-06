@@ -10,48 +10,52 @@ fit_marginals(
   cov_mat,
   formula1,
   family1,
-  to = "gaussian",
   DT = TRUE,
   epsilon = 1e-06,
   ncores = ncores
 )
 }
 \arguments{
-\item{gene_list}{A vector of gene names or indices for which the conditional margins are to be fit.}
+\item{gene_list}{A vector of gene names or indices (row names or row numbers of \code{count_mat}) to process.}
 
-\item{count_mat}{A matrix of gene expression counts where rows represent genes and columns represent observations.}
+\item{count_mat}{A matrix of raw gene expression counts. Rows correspond to genes, columns to observations (cells/spots).}
 
-\item{cov_mat}{A matrix or data frame of covariates used for fitting the marginal distributions.}
+\item{cov_mat}{A matrix or data frame of covariates used for marginal modeling (e.g., spatial coordinates or experimental annotations).}
 
-\item{formula1}{A formula object or string specifying the model to be used for marginal fitting (e.g., \code{~ covariate}).}
+\item{formula1}{A formula object or string (e.g., \code{"~ covariate1 + covariate2"}) specifying the model structure for the mean.}
 
-\item{family1}{The distribution family to be used for fitting. Supported options include \code{'gaussian'}, \code{'poisson'}, or \code{'nb'}.}
+\item{family1}{A string specifying the distribution family to be used for modeling. Supported values include \code{"gaussian"}, \code{"poisson"}, \code{"nb"}, or \code{"zinb"}.}
 
-\item{to}{The target distribution to transform to. Options are \code{'uniform'} or \code{'gaussian'}. Default is \code{'gaussian'}.}
+\item{DT}{Logical; if \code{TRUE}, applies a discrete transformation suitable for count data. Default is \code{TRUE}.}
 
-\item{DT}{A logical value indicating whether discrete transformation should be applied. Default is \code{TRUE}.}
+\item{epsilon}{A small numeric constant to avoid boundary issues (e.g., \code{0} or \code{1} values in uniform distribution). Default is \code{1e-6}.}
 
-\item{epsilon}{A small number to avoid boundary values during transformation. Default is \code{1e-6}.}
+\item{ncores}{Integer specifying the number of cores to use for parallel processing via \code{parallel::mclapply}.}
 
-\item{ncores}{The number of CPU cores to use for parallel processing. Default is the number of available cores.}
+\item{to}{Target distribution to transform to. Must be either \code{"uniform"} or \code{"gaussian"}. Default is \code{"gaussian"}.}
 }
 \value{
-A matrix where each row represents the transformed values for a gene.
+A list containing two matrices:
+\describe{
+\item{marginal}{A matrix of transformed values from each gene, transformed to follow a standard normal distribution.}
+\item{residual}{A matrix of values transformed to standard uniform distribution (before applying the Gaussian quantile function).}
+}
 }
 \description{
 This function applies marginal fitting and transforms each gene's expression to follow a standard Gaussian distribution.
 }
 \examples{
 data(test_data)
-marginals <- fit_marginals(
+# Fit standardized marginals for gene expressions
+marginal_res <- fit_marginals(
   gene_list = test_data$gene_list,
   count_mat = test_data$count_mat,
   cov_mat = test_data$cov_mat,
   formula1 = "layer_annotations",
   family1 = "nb",
-  to = "gaussian",
   DT = TRUE,
   epsilon = 1e-6,
   ncores = 2
 )
+
 }
