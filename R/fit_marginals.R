@@ -31,7 +31,7 @@
 #'   epsilon = 1e-6,
 #'   ncores = 2
 #' )
-#' 
+#'
 #' @importFrom parallel mclapply
 #' @export
 
@@ -47,13 +47,15 @@ fit_marginals <- function(gene_list,
   result <- parallel::mclapply(gene_list, function(gene) {
     tryCatch(
       {
-        fit_marginal(gene = gene, 
-                     count_mat = count_mat, 
-                     cov_mat = cov_mat,
-                     formula1 = formula1,
-                     family1 = family1, 
-                     DT = DT, 
-                     epsilon = epsilon)
+        fit_marginal(
+          gene = gene,
+          count_mat = count_mat,
+          cov_mat = cov_mat,
+          formula1 = formula1,
+          family1 = family1,
+          DT = DT,
+          epsilon = epsilon
+        )
       },
       error = function(e) {
         message("Error with model: ", e$message)

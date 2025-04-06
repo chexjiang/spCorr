@@ -33,7 +33,7 @@ fit_products(
 
 \item{ncores}{Number of cores to use for parallel processing with \code{mclapply}.}
 
-\item{global_test}{Character string indicating the type of global test to perform. Options are \code{"LRT"} (likelihood ratio test) or \code{"t.test"}.}
+\item{global_test}{Method for global testing in product models. Options: \code{"lrt"} (likelihood ratio test) or \code{"wald"} (Wald-style smooth term test). Default is \code{"wald"}.}
 
 \item{return_models}{Logical; if \code{TRUE}, returns the full model object for each gene pair.}
 
@@ -87,7 +87,7 @@ model_list <- fit_products(
   family2 = quasiproductr(),
   control = list(),
   ncores = 2,
-  global_test = "LRT",
+  global_test = "wald",
   return_models = FALSE,
   return_coefs = FALSE,
   preconstruct_smoother = TRUE

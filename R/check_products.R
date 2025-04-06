@@ -35,7 +35,7 @@
 #'   gene_pair_list = test_data$gene_pair_list,
 #'   marginals = marginal_res$marginal,
 #'   cov_mat = test_data$cov_mat,
-#'   check_morani = FALSE,,
+#'   check_morani = FALSE, ,
 #'   ncores = 2
 #' )
 #' }

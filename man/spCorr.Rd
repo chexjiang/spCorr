@@ -14,60 +14,77 @@ spCorr(
   formula2 = "s(x1, x2, bs='tp', k=50)",
   family2 = quasiproductr(),
   DT = TRUE,
-  global_test = "LRT",
+  global_test = "wald",
+  return_models = FALSE,
+  return_coefs = FALSE,
+  check_morani = FALSE,
+  preconstruct_smoother = TRUE,
   ncores = 2,
   control = list(),
   epsilon = 1e-06,
-  seed = 123,
-  preconstruct_smoother = TRUE,
-  return_models = FALSE,
-  return_coefs = FALSE,
-  check_morani = FALSE
+  seed = 123
 )
 }
 \arguments{
-\item{count_mat}{A matrix of counts where rows represent genes and columns represent observations.}
+\item{count_mat}{A matrix of raw gene expression counts (genes × spots/cells).}
 
-\item{gene_list}{A vector of gene names or indices for which the conditional margins are to be fit.}
+\item{gene_list}{A vector of gene names or row indices for which marginals will be fit.}
 
-\item{gene_pair_list}{A data frame or matrix containing pairs of gene names (or indices) to be analyzed.}
+\item{gene_pair_list}{A two-column data frame or matrix specifying gene pairs (by name or index).}
 
-\item{cov_mat}{A matrix or data frame of covariates used for fitting.}
+\item{cov_mat}{A data frame of covariates used in both marginal and product fitting (must contain \code{x1} and \code{x2} for spatial coordinates).}
 
-\item{formula1}{A formula object or string specifying the model for fitting the marginal distributions (e.g., \code{~ covariate}).}
+\item{formula1}{Formula or string specifying the model structure for marginals (e.g., \code{"~ covariate"}). Use \code{"1"} for intercept-only.}
 
-\item{family1}{The distribution family for marginal fitting. Options include \code{'gaussian'}, \code{'poisson'}, or \code{'nb'}. Default is \code{'nb'}.}
+\item{family1}{Distribution family for marginal models. Options: \code{"gaussian"}, \code{"poisson"}, \code{"nb"}, or \code{"zinb"}. Default: \code{"nb"}.}
 
-\item{formula2}{A formula object or string specifying the model for fitting the product distributions (e.g., \code{s(x1, x2, bs='tp', k=50)}).}
+\item{formula2}{Formula or string specifying the smoother for GAMs (e.g., \code{"s(x1, x2, bs='tp', k=50)"}).}
 
-\item{family2}{The distribution family for product fitting. Default is \code{quasiproductr()}.}
+\item{family2}{A GAM family object for product modeling (e.g., \code{quasiproductr()}).}
 
-\item{DT}{Logical. If \code{TRUE}, applies discrete transformation during margin fitting. Default is \code{TRUE}.}
+\item{DT}{Logical; if \code{TRUE}, applies a discrete transformation to marginals. Default is \code{TRUE}.}
 
-\item{ncores}{Integer. The number of cores to use for parallel processing. Default is \code{2}.}
+\item{global_test}{Method for global testing in product models. Options: \code{"lrt"} (likelihood ratio test) or \code{"wald"} (Wald-style smooth term test). Default is \code{"wald"}.}
 
-\item{control}{A list of control parameters passed to the fitting functions.}
+\item{return_models}{Logical; if \code{TRUE}, returns full GAM model objects for each gene pair. Default is \code{FALSE}.}
 
-\item{seed}{Integer. Seed value for reproducibility. Default is \code{123}.}
+\item{return_coefs}{Logical; if \code{TRUE}, returns model coefficients and variances. Default is \code{FALSE}.}
 
-\item{preconstruct_smoother}{Logical. If \code{TRUE}, uses a cached smoother to speed up computations. Default is \code{TRUE}.}
+\item{check_morani}{Logical; if \code{TRUE}, filters gene pairs using Moran's I on the product. Default is \code{FALSE}.}
 
-\item{return_models}{Logical. If \code{TRUE}, returns the fitted model objects along with results. Default is \code{FALSE}.}
+\item{preconstruct_smoother}{Logical; if \code{TRUE}, replaces \code{bs='tp'}/\code{'gp'} with \code{tpcached}/\code{gpcached} for faster computation. Default is \code{TRUE}.}
 
-\item{local_testing}{Logical. If \code{TRUE}, performs local testing for each gene pair. Default is \code{FALSE}.}
+\item{ncores}{Integer number of cores for parallel processing. Default is \code{2}.}
+
+\item{control}{A list of control parameters passed to \code{mgcv::gam()} during product fitting.}
+
+\item{epsilon}{A small constant to avoid boundary issues in the uniform-to-Gaussian transformation. Default is \code{1e-6}.}
+
+\item{seed}{Random seed for reproducibility. Default is \code{123}.}
 }
 \value{
-A list containing:
+A named list containing:
 \describe{
-\item{test_res}{A list of results from testing the fitted product distributions.}
-\item{gene_expr}{A list of gene expression matrices for each gene pair.}
-\item{cov_mat}{The covariate matrix used in the fitting.}
-\item{model_list}{The fitted model objects, if \code{return_models = TRUE}.}
+\item{res_global}{A vector of adjusted p-values (FDR) from global tests for each gene pair.}
+\item{res_local}{A matrix of local fitted values (spatial correlation estimates) for each pair across spatial spots.}
+\item{marginals}{A matrix of standardized marginal values (standard normal) for each gene.}
+\item{residuals}{A matrix of uniform-transformed residuals for each gene.}
+\item{model_list}{(Optional) List of fitted GAM models if \code{return_models = TRUE}.}
+\item{model_coef_list}{(Optional) List of model coefficients if \code{return_coefs = TRUE}.}
 }
 }
 \description{
 This function fits conditional margins and models local correlation for a given list of genes and gene pairs using GAM-based models.
 It also performs statistical testing to identify significant patterns in gene co-expression.
+}
+\details{
+The pipeline consists of:
+\enumerate{
+\item Fitting conditional marginal distributions to individual genes.
+\item Calculating pairwise product expressions and optionally filtering via Moran's I.
+\item Fitting GAMs to model local spatial correlations between gene pairs.
+\item Outputting statistical results and fitted values (or models).
+}
 }
 \examples{
 data(test_data)
@@ -81,11 +98,17 @@ result <- spCorr(
   formula2 = "s(x1, x2, bs='tp', k=50)",
   family2 = quasiproductr(),
   DT = TRUE,
+  global_test = "LRT",
   return_models = FALSE,
+  return_coefs = FALSE,
+  check_morani = FALSE,
+  preconstruct_smoother = TRUE,
   ncores = 2,
   control = list(),
-  seed = 123,
-  local_testing = FALSE,
-  preconstruct_smoother = TRUE
+  epsilon = 1e-6,
+  seed = 123
 )
+}
+\seealso{
+\code{\link[=fit_marginals]{fit_marginals()}}, \code{\link[=check_products]{check_products()}}, \code{\link[=fit_products]{fit_products()}}
 }

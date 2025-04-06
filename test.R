@@ -1,4 +1,5 @@
-library(devtools)
+styler::style_pkg()
+devtools::document()
 devtools::build()
 devtools::install()
 
@@ -16,7 +17,7 @@ res1 <- spCorr(count_mat = test_data$count_mat,
                formula2 = "s(x1, x2, bs='tp', k=50)",
                family2 = quasiproductr(),
                DT = TRUE,
-               global_test = "t.test",
+               global_test = "wald",
                ncores = 2,
                control = list(),
                seed = 123,

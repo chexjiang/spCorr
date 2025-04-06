@@ -23,21 +23,24 @@ The following code is a quick example of running spCorr. The function `spCorr()`
 
 
 ``` r
-model_list <- spCorr(count_mat = test_data$count_mat,
-                     gene_list = test_data$gene_list,
-                     gene_pair_list = test_data$gene_pair_list,
-                     cov_mat = test_data$cov_mat,
-                     formula1 = "layer_annotations",
-                     family1 = 'nb',
-                     formula2 = "s(x1, x2, bs='tp', k=50)",
-                     family2 = quasiproductr(),
-                     DT = TRUE,
-                     return_models = FALSE,
-                     ncores = 2,
-                     control = list(),
-                     seed = 123,
-                     local_testing = FALSE,
-                     preconstruct_smoother = TRUE)
+spCorr <- function(count_mat,
+                   gene_list,
+                   gene_pair_list,
+                   cov_mat,
+                   formula1 = "1",
+                   family1 = "nb",
+                   formula2 = "s(x1, x2, bs='tp', k=50)",
+                   family2 = quasiproductr(),
+                   DT = TRUE,
+                   global_test = "wald",
+                   return_models = FALSE,
+                   return_coefs = FALSE,
+                   check_morani = FALSE,
+                   preconstruct_smoother = TRUE,
+                   ncores = 2,
+                   control = list(),
+                   epsilon = 1e-6,
+                   seed = 123)
 ```
 
 The parameters of `spCorr()` are:
@@ -61,17 +64,23 @@ The parameters of `spCorr()` are:
 
 - `family2`:  The distribution family for the product model.  Default is `quasiproductr()`.
 
-- `DT`: Boolean indicating whether to apply a discrete transformation during marginal fitting. Default is `TRUE`.
+- `DT`: Logical; if `TRUE`, applies a discrete transformation suitable for count data. Default is `TRUE`.
 
-- `return_models`: Boolean indicating whether to return the model objects along with results. Default is `FALSE`.
+- `global_test`: Method for global testing in product models. Options: `"lrt"` (likelihood ratio test) or `"wald"` (Wald-style smooth term test). Default is `"wald"`.
 
-- `ncores`: The number of cores for parallel processing. Default is `2`. 
+- `return_models`: Logical; if `TRUE`, return full GAM model objects. Default is `FALSE`.
 
-- `control`: A list of control parameters for the fitting functions.
+- `return_coefs` Logical; if `TRUE`, return model coefficients and covariance matrices. Default is `FALSE`.
+
+- `check_morani`: Logical; if `TRUE`, filters gene pairs using Moran's I on the product. Default is `FALSE`.
+
+- `preconstruct_smoother`: Logical; if `TRUE`, replaces `bs='tp'`/`'gp'` with `tpcached`/`gpcached` for faster computation. Default is `TRUE`.
+
+- `ncores`: Integer number of cores for parallel processing. Default is `2`.
+
+- `control`: A list of control parameters passed to `mgcv::gam()` during product fitting.
+
+- `epsilon`: A small constant to avoid boundary issues in the uniform-to-Gaussian transformation. Default is `1e-6`.
 
 - `seed`: A seed for reproducibility. Default is `123`.
-
-- `local_testing`: Boolean indicating whether to perform local significance testing for each gene pair. Default is `FALSE`.
-
-- `preconstruct_smoother`: Boolean indicating whether to use a cached smoother for faster computation. Default is `TRUE`.
 

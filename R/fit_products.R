@@ -11,11 +11,11 @@
 #' @param family2 A distribution family to be used for model fitting. Default is `quasiproductr()`, which must be defined elsewhere.
 #' @param control A list of control parameters passed to `mgcv::gam()`.
 #' @param ncores Number of cores to use for parallel processing with `mclapply`.
-#' @param global_test Character string indicating the type of global test to perform. Options are `"LRT"` (likelihood ratio test) or `"t.test"`.
+#' @param global_test Method for global testing in product models. Options: `"lrt"` (likelihood ratio test) or `"wald"` (Wald-style smooth term test). Default is `"wald"`.
 #' @param return_models Logical; if `TRUE`, returns the full model object for each gene pair.
 #' @param return_coefs Logical; if `TRUE`, returns model coefficients and variance-covariance matrices.
 #' @param preconstruct_smoother Logical; if `TRUE`, modifies the smoother basis (e.g., `'tp'` to `'tpcached'`) for caching and speed optimization. Default is `FALSE`.
-#' 
+#'
 #' @return A list where each element corresponds to a gene pair. The contents depend on `return_models` and `return_coefs`:
 #' \describe{
 #'   \item{res_global}{Result of the global test (either p-value or list with EDF and p-value).}
@@ -56,7 +56,7 @@
 #'   family2 = quasiproductr(),
 #'   control = list(),
 #'   ncores = 2,
-#'   global_test = "LRT",
+#'   global_test = "wald",
 #'   return_models = FALSE,
 #'   return_coefs = FALSE,
 #'   preconstruct_smoother = TRUE
@@ -133,7 +133,7 @@ fit_product <- function(product,
 
 
   ## Global testing
-  if (global_test == "LRT") {
+  if (global_test == "lrt") {
     ## Likelihood ratio test
 
     # Fit the null model
@@ -145,8 +145,8 @@ fit_product <- function(product,
     res_lrt <- anova(model, model0, test = "LRT")
     global_p <- res_lrt[2, "Pr(>Chi)"]
     res_global <- global_p
-  } else if (global_test == "t.test") {
-    ## Individual t-test
+  } else if (global_test == "wald") {
+    ## Wald test
 
     # Extract global p-value and edf from summary table
     global_p <- summary(model)$s.table[, "p-value"]
@@ -158,7 +158,7 @@ fit_product <- function(product,
 
   # Extracting local estimation results
   fitted_rho <- model$fitted.values
-  
+
   # Default is only return fitted values
   if (return_models) {
     # Model

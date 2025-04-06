@@ -3,28 +3,43 @@
 #' This function fits conditional margins and models local correlation for a given list of genes and gene pairs using GAM-based models.
 #' It also performs statistical testing to identify significant patterns in gene co-expression.
 #'
-#' @param count_mat A matrix of counts where rows represent genes and columns represent observations.
-#' @param gene_list A vector of gene names or indices for which the conditional margins are to be fit.
-#' @param gene_pair_list A data frame or matrix containing pairs of gene names (or indices) to be analyzed.
-#' @param cov_mat A matrix or data frame of covariates used for fitting.
-#' @param formula1 A formula object or string specifying the model for fitting the marginal distributions (e.g., `~ covariate`).
-#' @param family1 The distribution family for marginal fitting. Options include `'gaussian'`, `'poisson'`, or `'nb'`. Default is `'nb'`.
-#' @param formula2 A formula object or string specifying the model for fitting the product distributions (e.g., `s(x1, x2, bs='tp', k=50)`).
-#' @param family2 The distribution family for product fitting. Default is `quasiproductr()`.
-#' @param DT Logical. If `TRUE`, applies discrete transformation during margin fitting. Default is `TRUE`.
-#' @param return_models Logical. If `TRUE`, returns the fitted model objects along with results. Default is `FALSE`.
-#' @param ncores Integer. The number of cores to use for parallel processing. Default is `2`.
-#' @param control A list of control parameters passed to the fitting functions.
-#' @param seed Integer. Seed value for reproducibility. Default is `123`.
-#' @param local_testing Logical. If `TRUE`, performs local testing for each gene pair. Default is `FALSE`.
-#' @param preconstruct_smoother Logical. If `TRUE`, uses a cached smoother to speed up computations. Default is `TRUE`.
-#' @return A list containing:
-#' \describe{
-#'   \item{test_res}{A list of results from testing the fitted product distributions.}
-#'   \item{gene_expr}{A list of gene expression matrices for each gene pair.}
-#'   \item{cov_mat}{The covariate matrix used in the fitting.}
-#'   \item{model_list}{The fitted model objects, if `return_models = TRUE`.}
+#' The pipeline consists of:
+#' \enumerate{
+#'   \item Fitting conditional marginal distributions to individual genes.
+#'   \item Calculating pairwise product expressions and optionally filtering via Moran's I.
+#'   \item Fitting GAMs to model local spatial correlations between gene pairs.
+#'   \item Outputting statistical results and fitted values (or models).
 #' }
+#'
+#' @param count_mat A matrix of raw gene expression counts (genes × spots/cells).
+#' @param gene_list A vector of gene names or row indices for which marginals will be fit.
+#' @param gene_pair_list A two-column data frame or matrix specifying gene pairs (by name or index).
+#' @param cov_mat A data frame of covariates used in both marginal and product fitting (must contain `x1` and `x2` for spatial coordinates).
+#' @param formula1 Formula or string specifying the model structure for marginals (e.g., `"~ covariate"`). Use `"1"` for intercept-only.
+#' @param family1 Distribution family for marginal models. Options: `"gaussian"`, `"poisson"`, `"nb"`, or `"zinb"`. Default: `"nb"`.
+#' @param formula2 Formula or string specifying the smoother for GAMs (e.g., `"s(x1, x2, bs='tp', k=50)"`).
+#' @param family2 A GAM family object for product modeling (e.g., `quasiproductr()`).
+#' @param DT Logical; if `TRUE`, applies a discrete transformation to marginals. Default is `TRUE`.
+#' @param global_test Method for global testing in product models. Options: `"lrt"` (likelihood ratio test) or `"wald"` (Wald-style smooth term test). Default is `"wald"`.
+#' @param return_models Logical; if `TRUE`, returns full GAM model objects for each gene pair. Default is `FALSE`.
+#' @param return_coefs Logical; if `TRUE`, returns model coefficients and variances. Default is `FALSE`.
+#' @param check_morani Logical; if `TRUE`, filters gene pairs using Moran's I on the product. Default is `FALSE`.
+#' @param preconstruct_smoother Logical; if `TRUE`, replaces `bs='tp'`/`'gp'` with `tpcached`/`gpcached` for faster computation. Default is `TRUE`.
+#' @param ncores Integer number of cores for parallel processing. Default is `2`.
+#' @param control A list of control parameters passed to `mgcv::gam()` during product fitting.
+#' @param epsilon A small constant to avoid boundary issues in the uniform-to-Gaussian transformation. Default is `1e-6`.
+#' @param seed Random seed for reproducibility. Default is `123`.
+#'
+#' @return A named list containing:
+#' \describe{
+#'   \item{res_global}{A vector of adjusted p-values (FDR) from global tests for each gene pair.}
+#'   \item{res_local}{A matrix of local fitted values (spatial correlation estimates) for each pair across spatial spots.}
+#'   \item{marginals}{A matrix of standardized marginal values (standard normal) for each gene.}
+#'   \item{residuals}{A matrix of uniform-transformed residuals for each gene.}
+#'   \item{model_list}{(Optional) List of fitted GAM models if `return_models = TRUE`.}
+#'   \item{model_coef_list}{(Optional) List of model coefficients if `return_coefs = TRUE`.}
+#' }
+#'
 #' @examples
 #' data(test_data)
 #' result <- spCorr(
@@ -37,18 +52,20 @@
 #'   formula2 = "s(x1, x2, bs='tp', k=50)",
 #'   family2 = quasiproductr(),
 #'   DT = TRUE,
+#'   global_test = "LRT",
 #'   return_models = FALSE,
+#'   return_coefs = FALSE,
+#'   check_morani = FALSE,
+#'   preconstruct_smoother = TRUE,
 #'   ncores = 2,
 #'   control = list(),
-#'   seed = 123,
-#'   local_testing = FALSE,
-#'   preconstruct_smoother = TRUE
+#'   epsilon = 1e-6,
+#'   seed = 123
 #' )
+#' @seealso [fit_marginals()], [check_products()], [fit_products()]
 #' @importFrom mgcv gam
 #' @importFrom parallel mclapply
 #' @export
-
-
 spCorr <- function(count_mat,
                    gene_list,
                    gene_pair_list,
@@ -58,15 +75,15 @@ spCorr <- function(count_mat,
                    formula2 = "s(x1, x2, bs='tp', k=50)",
                    family2 = quasiproductr(),
                    DT = TRUE,
-                   global_test = "LRT",
+                   global_test = "wald",
+                   return_models = FALSE,
+                   return_coefs = FALSE,
+                   check_morani = FALSE,
+                   preconstruct_smoother = TRUE,
                    ncores = 2,
                    control = list(),
                    epsilon = 1e-6,
-                   seed = 123,
-                   preconstruct_smoother = TRUE,
-                   return_models = FALSE,
-                   return_coefs = FALSE,
-                   check_morani = FALSE) {
+                   seed = 123) {
   # Set reproducibility seed
   set.seed(seed)
 
@@ -83,7 +100,7 @@ spCorr <- function(count_mat,
     add = TRUE
   )
 
-  
+
   ## Fit conditional margins to gene_list
   message("Start Marginal Fitting for ", length(gene_list), " genes")
   marginal_res <- fit_marginals(
