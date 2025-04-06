@@ -31,8 +31,6 @@ fit_marginals(
 \item{epsilon}{A small numeric constant to avoid boundary issues (e.g., \code{0} or \code{1} values in uniform distribution). Default is \code{1e-6}.}
 
 \item{ncores}{Integer specifying the number of cores to use for parallel processing via \code{parallel::mclapply}.}
-
-\item{to}{Target distribution to transform to. Must be either \code{"uniform"} or \code{"gaussian"}. Default is \code{"gaussian"}.}
 }
 \value{
 A list containing two matrices:

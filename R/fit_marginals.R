@@ -7,7 +7,6 @@
 #' @param cov_mat A matrix or data frame of covariates used for marginal modeling (e.g., spatial coordinates or experimental annotations).
 #' @param formula1 A formula object or string (e.g., `"~ covariate1 + covariate2"`) specifying the model structure for the mean.
 #' @param family1 A string specifying the distribution family to be used for modeling. Supported values include `"gaussian"`, `"poisson"`, `"nb"`, or `"zinb"`.
-#' @param to Target distribution to transform to. Must be either `"uniform"` or `"gaussian"`. Default is `"gaussian"`.
 #' @param DT Logical; if `TRUE`, applies a discrete transformation suitable for count data. Default is `TRUE`.
 #' @param epsilon A small numeric constant to avoid boundary issues (e.g., `0` or `1` values in uniform distribution). Default is `1e-6`.
 #' @param ncores Integer specifying the number of cores to use for parallel processing via `parallel::mclapply`.

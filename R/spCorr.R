@@ -52,7 +52,7 @@
 #'   formula2 = "s(x1, x2, bs='tp', k=50)",
 #'   family2 = quasiproductr(),
 #'   DT = TRUE,
-#'   global_test = "LRT",
+#'   global_test = "lrt",
 #'   return_models = FALSE,
 #'   return_coefs = FALSE,
 #'   check_morani = FALSE,
