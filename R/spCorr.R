@@ -110,7 +110,8 @@ spCorr <- function(count_mat,
     formula1 = formula1,
     family = family1,
     DT = DT,
-    ncores = ncores
+    ncores = ncores,
+    seed = seed
   )
   marginals <- marginal_res$marginal
   residuals <- marginal_res$residual

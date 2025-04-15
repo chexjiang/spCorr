@@ -10,6 +10,7 @@
 #' @param DT Logical; if `TRUE`, applies a discrete transformation suitable for count data. Default is `TRUE`.
 #' @param epsilon A small numeric constant to avoid boundary issues (e.g., `0` or `1` values in uniform distribution). Default is `1e-6`.
 #' @param ncores Integer specifying the number of cores to use for parallel processing via `parallel::mclapply`.
+#' @param seed Random seed for reproducibility. Default is `123`.
 #'
 #' @return A list containing two matrices:
 #' \describe{
@@ -41,7 +42,8 @@ fit_marginals <- function(gene_list,
                           family1,
                           DT = TRUE,
                           epsilon = 1e-6,
-                          ncores = ncores) {
+                          ncores = ncores,
+                          seed = 123) {
   # Apply fit_marginal to each gene in gene_list
   result <- parallel::mclapply(gene_list, function(gene) {
     tryCatch(
@@ -53,7 +55,8 @@ fit_marginals <- function(gene_list,
           formula1 = formula1,
           family1 = family1,
           DT = DT,
-          epsilon = epsilon
+          epsilon = epsilon,
+          seed = seed
         )
       },
       error = function(e) {
@@ -86,7 +89,8 @@ fit_marginal <- function(gene,
                          formula1,
                          family1,
                          DT = TRUE,
-                         epsilon = 1e-6) {
+                         epsilon = 1e-6,
+                         seed) {
   # Extract data for the specific gene
   y <- as.matrix(count_mat[gene, ])
   dat <- cbind(y, cov_mat)
@@ -178,9 +182,8 @@ fit_marginal <- function(gene,
   # Frame
   family_frame <- cbind(y, get_params$mean_vec, get_params$theta_vec, get_params$zero_vec)
 
-
-  # Generate p-values
   calc_pvec <- function(x) {
+    set.seed(seed)
     switch(family1,
       gaussian = gamlss.dist::pNO(x[1], mu = x[2], sigma = abs(x[3])),
       poisson = stats::ppois(x[1], lambda = x[2]),
@@ -194,6 +197,7 @@ fit_marginal <- function(gene,
   # Apply discrete transformation if necessary
   if (DT && family1 %in% c("poisson", "nb", "zinb")) {
     calc_pvec2 <- function(x) {
+      set.seed(seed)
       switch(family1,
         poisson = stats::ppois(x[1] - 1, lambda = x[2]),
         nb = stats::pnbinom(x[1] - 1, mu = x[2], size = x[3]),
@@ -203,8 +207,10 @@ fit_marginal <- function(gene,
         )
       ) * as.integer(x[1] > 0)
     }
-
+    
     pvec2 <- apply(family_frame, 1, calc_pvec2)
+   
+    set.seed(seed)
     v <- stats::runif(length(pvec))
     r <- pvec * v + pvec2 * (1 - v)
   } else {

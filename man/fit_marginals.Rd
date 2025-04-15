@@ -12,7 +12,8 @@ fit_marginals(
   family1,
   DT = TRUE,
   epsilon = 1e-06,
-  ncores = ncores
+  ncores = ncores,
+  seed = 123
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ fit_marginals(
 \item{epsilon}{A small numeric constant to avoid boundary issues (e.g., \code{0} or \code{1} values in uniform distribution). Default is \code{1e-6}.}
 
 \item{ncores}{Integer specifying the number of cores to use for parallel processing via \code{parallel::mclapply}.}
+
+\item{seed}{Random seed for reproducibility. Default is \code{123}.}
 }
 \value{
 A list containing two matrices:
