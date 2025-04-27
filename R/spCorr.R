@@ -86,12 +86,12 @@ spCorr <- function(count_mat,
                    seed = 123) {
   # Set reproducibility seed
   set.seed(seed)
-  
+
   # Create the caching environment
   .smoother_env <- new.env(parent = emptyenv())
   # Temporarily assign to global environment
   assign(".smoother_env", .smoother_env, envir = .GlobalEnv)
-  
+
   on.exit(
     {
       # Clean up .smoother_env after spCorr finishes
@@ -99,8 +99,8 @@ spCorr <- function(count_mat,
     },
     add = TRUE
   )
-  
-  
+
+
   ## Fit conditional margins to gene_list
   message("Start Marginal Fitting for ", length(gene_list), " genes")
   marginal_res <- fit_marginals(
@@ -115,8 +115,8 @@ spCorr <- function(count_mat,
   )
   marginals <- marginal_res$marginal
   residuals <- marginal_res$residual
-  
-  
+
+
   ## Check and subset spatially varying cross product
   message("Start Extracting Spatially Varying Gene Pairs")
   check_product_res <- check_products(
@@ -128,9 +128,9 @@ spCorr <- function(count_mat,
   )
   product_list <- check_product_res$product_list
   gene_pair_list_subset <- check_product_res$gene_pair_list_subset
-  
-  
-  
+
+
+
   ## Fit product distributions to gene_pair_list_subset
   message("Start Product Fitting for ", nrow(gene_pair_list), " gene pairs")
   product_res_list <- fit_products(
@@ -146,7 +146,7 @@ spCorr <- function(count_mat,
     return_coefs = return_coefs,
     preconstruct_smoother = preconstruct_smoother
   )
-  
+
   ## Extract the global testing result
   res_global <- do.call(rbind, lapply(product_res_list, function(x) {
     tryCatch(x$res_global$global_p, error = function(e) NULL)
@@ -154,7 +154,7 @@ spCorr <- function(count_mat,
   if (!is.null(res_global) && length(res_global) > 0) {
     res_global <- p.adjust(res_global, method = "fdr")
   }
-  
+
   ## Extract local fitted values
   res_local <- do.call(rbind, lapply(product_res_list, function(x) {
     tryCatch(x$fitted_rho, error = function(e) NULL)
@@ -162,9 +162,9 @@ spCorr <- function(count_mat,
   if (!is.null(res_local)) {
     colnames(res_local) <- row.names(cov_mat)
   }
-  
-  
-  
+
+
+
   ## Default is only return fitted values
   if (return_models) {
     # Model
@@ -181,7 +181,7 @@ spCorr <- function(count_mat,
     model_coef_list <- lapply(product_res_list, function(x) {
       tryCatch(x$model_coef, error = function(e) NULL)
     })
-    
+
     return(list(
       res_global = res_global,
       marginals = marginals,

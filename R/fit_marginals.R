@@ -207,9 +207,9 @@ fit_marginal <- function(gene,
         )
       ) * as.integer(x[1] > 0)
     }
-    
+
     pvec2 <- apply(family_frame, 1, calc_pvec2)
-   
+
     set.seed(seed)
     v <- stats::runif(length(pvec))
     r <- pvec * v + pvec2 * (1 - v)
