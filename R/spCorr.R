@@ -148,12 +148,18 @@ spCorr <- function(count_mat,
   )
 
   ## Extract the global testing result
-  res_global <- do.call(rbind, lapply(product_res_list, function(x) {
+  res_global <- do.call(c, lapply(product_res_list, function(x) {
     tryCatch(x$res_global$global_p, error = function(e) NULL)
   }))
   if (!is.null(res_global) && length(res_global) > 0) {
     res_global <- p.adjust(res_global, method = "fdr")
   }
+
+  ## Extract the global edf
+  edf <- do.call(c, lapply(product_res_list, function(x) {
+    tryCatch(x$res_global$edf, error = function(e) NULL)
+  }))
+
 
   ## Extract local fitted values
   res_local <- do.call(rbind, lapply(product_res_list, function(x) {
@@ -171,6 +177,7 @@ spCorr <- function(count_mat,
     model_list <- lapply(product_res_list, function(x) x$model)
     return(list(
       res_global = res_global,
+      edf = edf,
       res_local = res_local,
       marginals = marginals,
       residuals = residuals,
@@ -184,6 +191,7 @@ spCorr <- function(count_mat,
 
     return(list(
       res_global = res_global,
+      edf = edf,
       marginals = marginals,
       residuals = residuals,
       model_coef_list = model_coef_list
@@ -192,6 +200,7 @@ spCorr <- function(count_mat,
     # Fitted values
     return(list(
       res_global = res_global,
+      edf = edf,
       res_local = res_local,
       residuals = residuals,
       marginals = marginals

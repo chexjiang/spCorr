@@ -144,7 +144,8 @@ fit_product <- function(product,
 
     res_lrt <- anova(model, model0, test = "LRT")
     global_p <- res_lrt[2, "Pr(>Chi)"]
-    res_global <- global_p
+    edf <- sum(model$edf)
+    res_global <- list(global_p = global_p, edf = edf)
   } else if (global_test == "wald") {
     ## Wald test
 
