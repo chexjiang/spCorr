@@ -54,8 +54,3 @@ res2 <- spCorr(count_mat = test_data$count_mat,
 time2 <- Sys.time()
 time2 - time1
 
-
-
-
-
-
