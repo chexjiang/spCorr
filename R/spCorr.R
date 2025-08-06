@@ -169,7 +169,10 @@ spCorr <- function(count_mat,
     colnames(res_local) <- row.names(cov_mat)
   }
 
-
+  ## Extract local fitted values predicted interval
+  res_local_pi <- lapply(product_res_list, function(x) {
+    tryCatch(x$pred_interval, error = function(e) NULL)
+  })
 
   ## Default is only return fitted values
   if (return_models) {
@@ -179,6 +182,7 @@ spCorr <- function(count_mat,
       res_global = res_global,
       edf = edf,
       res_local = res_local,
+      res_local_pi = res_local_pi,
       marginals = marginals,
       residuals = residuals,
       model_list = model_list
@@ -202,6 +206,7 @@ spCorr <- function(count_mat,
       res_global = res_global,
       edf = edf,
       res_local = res_local,
+      res_local_pi = res_local_pi,
       residuals = residuals,
       marginals = marginals
     ))

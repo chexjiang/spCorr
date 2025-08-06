@@ -73,6 +73,7 @@ fit_products <- function(gene_pair_list_subset,
                          control = list(),
                          ncores,
                          global_test,
+                         critical_value = 0.05,
                          return_models = FALSE,
                          return_coefs = FALSE,
                          preconstruct_smoother = FALSE) {
@@ -159,13 +160,32 @@ fit_product <- function(product,
 
   # Extracting local estimation results
   fitted_rho <- model$fitted.values
-
+  
+  # Extracting predicted interval of fitted values 
+  p <- predict(model, type = "link", se.fit = TRUE) # include standard errors
+  z_val <- qnorm(1-critical_value/2)
+  fit_link <- p$fit
+  se_link <- p$se.fit
+  upper_link <- fit_link + z_val * se_link
+  lower_link <- fit_link - z_val * se_link
+  # Transform to response scale using the inverse link
+  inv_link <- model$family$linkinv 
+  fit_response <- inv_link(fit_link)
+  upper_response <- inv_link(upper_link)
+  lower_response <- inv_link(lower_link) 
+  pred_interval <- data.frame(
+    lower = lower_response,
+    upper = upper_response
+  )
+  
+  
   # Default is only return fitted values
   if (return_models) {
     # Model
     return(list(
       res_global = res_global,
       fitted_rho = fitted_rho,
+      pred_interval = pred_interval,
       model = model
     ))
   } else if (return_coefs) {
@@ -182,7 +202,8 @@ fit_product <- function(product,
     # Fitted values
     return(list(
       res_global = res_global,
-      fitted_rho = fitted_rho
+      fitted_rho = fitted_rho,
+      pred_interval = pred_interval
     ))
   }
 }
