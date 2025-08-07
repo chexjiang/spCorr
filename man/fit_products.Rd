@@ -13,6 +13,7 @@ fit_products(
   control = list(),
   ncores,
   global_test,
+  critical_value = 0.05,
   return_models = FALSE,
   return_coefs = FALSE,
   preconstruct_smoother = FALSE

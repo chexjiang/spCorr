@@ -91,6 +91,7 @@ fit_products <- function(gene_pair_list_subset,
       global_test = global_test,
       return_models = return_models,
       return_coefs = return_coefs,
+      critical_value = critical_value,
       preconstruct_smoother = preconstruct_smoother
     )
   }, mc.cores = ncores)
@@ -107,6 +108,7 @@ fit_product <- function(product,
                         global_test,
                         return_models = FALSE,
                         return_coefs = FALSE,
+                        critical_value = 0.05,
                         preconstruct_smoother) {
   # Extract product of expressions
   dat <- cbind(z = product, cov_mat)
@@ -160,25 +162,25 @@ fit_product <- function(product,
 
   # Extracting local estimation results
   fitted_rho <- model$fitted.values
-  
-  # Extracting predicted interval of fitted values 
+
+  # Extracting predicted interval of fitted values
   p <- predict(model, type = "link", se.fit = TRUE) # include standard errors
-  z_val <- qnorm(1-critical_value/2)
+  z_val <- qnorm(1 - critical_value / 2)
   fit_link <- p$fit
   se_link <- p$se.fit
   upper_link <- fit_link + z_val * se_link
   lower_link <- fit_link - z_val * se_link
   # Transform to response scale using the inverse link
-  inv_link <- model$family$linkinv 
+  inv_link <- model$family$linkinv
   fit_response <- inv_link(fit_link)
   upper_response <- inv_link(upper_link)
-  lower_response <- inv_link(lower_link) 
+  lower_response <- inv_link(lower_link)
   pred_interval <- data.frame(
     lower = lower_response,
     upper = upper_response
   )
-  
-  
+
+
   # Default is only return fitted values
   if (return_models) {
     # Model
