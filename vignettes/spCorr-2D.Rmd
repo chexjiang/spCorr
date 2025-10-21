@@ -1,0 +1,146 @@
+---
+title: "Modeling spatially varying gene correlation across 2D space"
+author: |
+  **Chenxin (Flora) Jiang**  
+  Department of Statistics and Data Science, University of California, Los Angeles  
+  <cflorajiang@g.ucla.edu>
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output: 
+  BiocStyle::html_document:
+    self_contained: yes
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    code_folding: show
+vignette: >
+  %\VignetteIndexEntry{spCorr-2D}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+tools::R_user_dir("mcRigor", which="cache")
+```
+
+```{r setup, message=FALSE, warning=FALSE, results='hide'}
+library(spCorr)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(viridis)
+```
+
+## Introduction
+
+This tutorial demonstrates how to use **spCorr** to
+(i) infer spot-level gene–gene correlations for specified gene pairs, and
+(ii) identify gene pairs exhibiting *spatially varying correlation (SVC)* patterns across a 2D spatial space.
+
+## Prepare input data
+
+In this example, we analyze a subset of the **human oral squamous cell carcinoma (OSCC)** dataset generated using the **10x Visium** platform (sample 2 from [Arora *et al.*, 2023](https://www.nature.com/articles/s41467-023-40271-4)). We focus on transcription factor (TF)–target gene pairs curated from the [TRRUST v2 database](https://www.grnpedia.org/trrust/).
+
+```{r data_load, message=FALSE, warning=FALSE}
+## Load example spatial transcriptomics data
+# It contains two objects: counts (gene expression matrix) and cov_mat (spot-level covariates)
+load(url("https://figshare.com/ndownloader/files/58905268"))
+# counts: gene expression count matrix (genes x spots)
+print(dim(counts))
+
+# cov_mat: spot spatial coordinates and other spot-level covariates
+print(dim(cov_mat))
+head(cov_mat)
+
+## Load TF–target gene pairs
+tf_df <- readRDS(url("https://figshare.com/ndownloader/files/58905265"))
+tf_df <- tf_df[tf_df$type=="Activation" | tf_df$type=="Unknown",]
+head(tf_df)
+```
+
+Now we prepare the input data for **spCorr** analysis.
+
+```{r data_prepare}
+## Create gene pair list (data frame format)
+gene_pair_list <- tf_df[, c("tf", "target")]
+rownames(gene_pair_list) <- apply(gene_pair_list, 1, paste, collapse = "_")
+
+## Extract the unique set of genes from these pairs
+gene_list <- unique(c(gene_pair_list$tf, gene_pair_list$target))
+
+## Check summary
+cat("Number of selected gene pairs:", nrow(gene_pair_list), "\n")
+cat("Number of unique genes:", length(gene_list), "\n")
+head(gene_pair_list)
+```
+
+## Run spCorr
+
+We now apply **spCorr** to infer spot-level gene–gene correlations for the selected gene pairs and to identify gene pairs with spatially varying correlation (SVC) pattern across the 2D spatial space.
+
+```{r run_spCorr}
+res <- spCorr(counts,
+             gene_list,
+             gene_pair_list,
+             cov_mat,
+             formula1 = "tumor_annotations",
+             family1 = "nb",
+             formula2 = "s(x1, x2, bs='tp', k=30)",
+             family2 = quasiproductr(),
+             DT = TRUE,
+             global_test = "lrt",
+             return_models = FALSE,
+             return_coefs = FALSE,
+             check_morani = FALSE,
+             preconstruct_smoother = FALSE,
+             ncores = 10,
+             seed = 123)
+```
+
+
+```{r}
+str(res, max.level = 1)
+```
+
+## Visualize spot-level correlations
+
+We next visualize the inferred spot-level correlations and SVC patterns for specific gene pairs. The spot-level correlation estimates are stored in `res$res_local`, which is a spot-by-gene pair matrix.
+
+```{r p_corr, fig.width=8.5, fig.height=3, out.width='95%', fig.align='center'}
+# Specify gene pairs to visualize
+gene_pair <- c("ELF3_SPRR1B", "ELF3_SPRR3", "ELF3_SPRR2A", "ELF3_SPRR1A", "ELF3_CLDN7")
+rho_mat <- t(res$res_local[gene_pair, , drop = FALSE])  # spots × gene pairs
+
+# Combine with covariates and reshape to long format
+plot_data <- cbind(cov_mat, rho_mat) %>% as.data.frame() %>% pivot_longer(cols = all_of(gene_pair), names_to = "gene_pair", values_to = "rho")
+
+p_corr <- ggplot(plot_data, aes(x = x2, y = -x1, color = rho)) +
+  geom_point(size = 0.3) + scale_color_gradientn(colors = viridis_pal(option = "magma")(10), name = "correlation") +
+  coord_fixed(ratio = 1) + labs(x = NULL, y = NULL) +
+  facet_wrap(~gene_pair, nrow = 1) +
+  theme_minimal() + theme(
+    axis.text = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.2),
+    strip.background = element_rect(color = "black", fill = NA, linewidth = 0.2)
+  )
+p_corr
+```
+
+## Identify gene pairs with significant SVC patterns
+
+The **spCorr** also provides SVC testing to identify gene pairs whose correlations vary significantly across spatial locations. The BH-adjusted *p*-values from the SVC testing are stored in `res$res_global`.
+
+```{r svc_test}
+pval_svc <- res$res_global
+gene_pair_sig <- which(pval_svc < 0.05)
+cat("Number of gene pairs with significant SVC patterns (FDR < 0.05):", length(gene_pair_sig), "\n")
+```
+
+## Session information
+
+```{r}
+sessionInfo()
+```

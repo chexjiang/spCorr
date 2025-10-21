@@ -1,23 +1,28 @@
 Package: spCorr
-Title: spCorr models spatially variable gene co-expression pattern in spatial transcriptomics
+Title: spCorr: flexible and scalable inference of spatially varying correlation in spatial transcriptomics
 Version: 0.0.0.9000
 Authors@R: 
-    person("Chenxin", "Jiang", , "cflorajiang@g.ucla.edu", role = c("aut", "cre"),
+    person(given = "Chenxin (Flora)",
+           family = "Jiang",
+           email = "cflorajiang@g.ucla.edu",
+           role = c("aut", "cre"),
            comment = c(ORCID = "0009-0005-7369-4116"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Description: The R package spCorr provides a flexible and scalable framework 
+    for detecting and characterizing spatially varying correlations (SVCs) 
+    in spatial transcriptomics data. It enables spot-level estimation of 
+    gene–gene correlations, identifies gene pairs whose correlations vary 
+    across space or between tissue domains, and supports flexible modeling 
+    of count data and spot-level covariates with efficient, permutation-free 
+    statistical inference.
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
     dplyr,
-    ggplot2,
     MASS,
     mgcv,
     parallel,
-    patchwork,
-    purrr,
     tibble,
     tidyr,
     ape
@@ -25,3 +30,4 @@ Suggests:
     testthat (>= 3.0.0),
     waldo (>= 0.2.2)
 Config/testthat/edition: 3
+VignetteBuilder: knitr
