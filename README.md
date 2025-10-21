@@ -4,7 +4,7 @@
 
 
 ## Overview
-![spCorr Overview](fig/fig1.png)
+![spCorr Overview](fig/fig1.jpg)
 
 
 ## Installation<a name="installation-"></a>
