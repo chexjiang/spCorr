@@ -1,5 +1,5 @@
 Package: spCorr
-Title: spCorr: flexible and scalable inference of spatially varying correlation in spatial transcriptomics
+Title: flexible and scalable inference of spatially varying correlation in spatial transcriptomics
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Chenxin (Flora)",
@@ -23,11 +23,11 @@ Imports:
     MASS,
     mgcv,
     parallel,
-    tibble,
-    tidyr,
     ape
 Suggests: 
     testthat (>= 3.0.0),
     waldo (>= 0.2.2)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
+URL: https://chexjiang.github.io/spCorr, https://github.com/chexjiang/spCorr
+BugReports: https://github.com/chexjiang/spCorr/issues

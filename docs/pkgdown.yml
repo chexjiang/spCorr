@@ -3,4 +3,7 @@ pkgdown: 2.1.3
 pkgdown_sha: ~
 articles:
   spCorr-2D: spCorr-2D.html
-last_built: 2025-10-21T11:01Z
+last_built: 2025-10-21T11:36Z
+urls:
+  reference: https://chexjiang.github.io/spCorr/reference
+  article: https://chexjiang.github.io/spCorr/articles

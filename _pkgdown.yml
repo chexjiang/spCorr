@@ -1,0 +1,22 @@
+url: https://chexjiang.github.io/spCorr
+
+template:
+  bootstrap: 5
+  bootswatch: flatly
+
+navbar:
+  structure:
+    left: [reference, articles]
+    right: [github]
+  components:
+    reference:
+      text: "Reference"
+      href: reference/index.html
+    articles:
+      text: "Tutorials"
+      menu:
+        - text: "Modeling spatially varying gene correlation across 2D space"
+          href: articles/spCorr-2D.html
+    github:
+      icon: fab fa-github
+      href: https://github.com/chexjiang/spCorr
