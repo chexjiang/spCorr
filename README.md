@@ -1,9 +1,7 @@
 # spCorr
 
-**spCorr** models spatially variable gene co-expression patterns in spatial transcriptomics.
+The R package **spCorr** is a flexible and scalable framework for detecting and characterizing **spatially varying correlations (SVCs)** in spatial transcriptomics data. It provides (1) spot-level correlation estimates between gene pairs and (2) identifies gene pairs whose correlations vary across space or between tissue domains. **spCorr** supports flexible modeling of spot-level covariates, directly models count data, and enables efficient, permutation-free statistical inference. The following figure illustrates the workflow of **spCorr**:
 
-
-## Overview
 ![spCorr Overview](fig/fig1.jpg)
 
 
@@ -19,7 +17,7 @@ devtools::install_github("chexjiang/spCorr")
 
 ## Quick Start<a name="quick-start"></a>
 
-The following code is a quick example of running spCorr. The function `spCorr()` takes in `count_mat`, `gene_list`, `gene_pair_list`, and `cov_mat` (which should include spatial coordinates and any confounders).
+The following code is a quick example of running **spCorr**. The function `spCorr()` takes in `count_mat`, `gene_list`, `gene_pair_list`, and `cov_mat` (which should include spatial coordinates and any spot-level covariates).
 
 
 ``` r
@@ -84,3 +82,14 @@ The parameters of `spCorr()` are:
 
 - `seed`: A seed for reproducibility. Default is `123`.
 
+
+
+## Tutorials<a name="tutorials"></a>
+
+For all detailed tutorials, please check the website. The tutorials will demonstrate main functionalities of **spCorr**.
+
+## Related Paper<a name="related-paper"></a>
+
+Jiang, C., Yin, Y., Robson, P., Li, J. Y., Li, J. J., & Song, D. (2025).  
+**spCorr: flexible and scalable inference of spatially varying correlation in spatial transcriptomics.**  
+*bioRxiv*, 2025-09. [https://www.biorxiv.org/content/10.1101/2025.09.30.679684v1](https://www.biorxiv.org/content/10.1101/2025.09.30.679684v1)
