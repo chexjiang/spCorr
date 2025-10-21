@@ -1,6 +1,6 @@
 # spCorr
 
-The R package **spCorr** is a flexible and scalable framework for detecting and characterizing **spatially varying correlations (SVCs)** in spatial transcriptomics data. It provides (1) spot-level correlation estimates between gene pairs and (2) identifies gene pairs whose correlations vary across space or between tissue domains. **spCorr** supports flexible modeling of spot-level covariates, directly models count data, and enables efficient, permutation-free statistical inference. The following figure illustrates the workflow of **spCorr**:
+The R package **spCorr** is a flexible and scalable framework for detecting and characterizing **spatially varying correlations (SVCs)** in spatial transcriptomics data. It provides (1) spot-level correlation estimates between gene pairs and (2) identifies gene pairs whose correlations vary across space or between tissue domains. The spCorr supports flexible modeling of spot-level covariates, directly models count data, and enables efficient, permutation-free statistical inference. The following figure illustrates the workflow of spCorr:
 
 ![](man/figures/fig1.jpg)
 
@@ -49,11 +49,11 @@ The parameters of `spCorr()` are:
 
 - `gene_pair_list`: A data frame or matrix containing pairs of gene names (or indices) to be analyzed.
 
-- `cov_mat`: A matrix of covariates, including spatial coordinates and any confounders.
+- `cov_mat`: A matrix of covariates, including spatial coordinates and any spot-level covariates (e.g.: spot annotations).
 
 - `formula1`: A formula specifying the model to be used for fitting the marginal distributions.  
-    - If no confounder needs to be removed, set `formula1 = "1"`.  
-    - If confounders need to be removed, specify `formula1 = "confounder_name"`, where `confounder_name` is the column name from `cov_mat` representing the confounder.
+    - If no spot-level covariate needs to be adjusted, set `formula1 = "1"`.  
+    - If there is a spot-level covariate need to be adjusted, specify `formula1 = "covariate_name"`, where `covariate_name` is the column name from `cov_mat` representing the spot-level covariate.
 
 - `family1`: The distribution family for marginals (e.g., `'gaussian'`, `'poisson'`, `'nb'`).  
 

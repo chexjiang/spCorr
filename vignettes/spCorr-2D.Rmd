@@ -1,7 +1,7 @@
 ---
 title: "Modeling spatially varying gene correlation across 2D space"
 author: |
-  **Chenxin (Flora) Jiang**  
+  Chenxin (Flora) Jiang  
   Department of Statistics and Data Science, University of California, Los Angeles  
   <cflorajiang@g.ucla.edu>
 date: "`r format(Sys.Date(), '%d %B %Y')`"
@@ -109,7 +109,7 @@ str(res, max.level = 1)
 
 We next visualize the inferred spot-level correlations and SVC patterns for specific gene pairs. The spot-level correlation estimates are stored in `res$res_local`, which is a spot-by-gene pair matrix.
 
-```{r p_corr, fig.width=8.5, fig.height=3, out.width='95%', fig.align='center'}
+```{r p_corr, fig.width=9, fig.height=4, out.width='100%', fig.align='center'}
 # Specify gene pairs to visualize
 gene_pair <- c("ELF3_SPRR1B", "ELF3_SPRR3", "ELF3_SPRR2A", "ELF3_SPRR1A", "ELF3_CLDN7")
 rho_mat <- t(res$res_local[gene_pair, , drop = FALSE])  # spots × gene pairs
