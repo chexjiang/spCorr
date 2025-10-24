@@ -1,0 +1,414 @@
+---
+title: "Semi-synthetic simulation for user-defined correlation structures"
+author: |
+  Yuxin Yin   
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output: 
+  BiocStyle::html_document:
+    self_contained: yes
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    code_folding: show
+vignette: >
+  %\VignetteIndexEntry{spCorr-semi-synthetic-simulation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+tools::R_user_dir("mcRigor", which="cache")
+```
+
+
+```{r setup, message=FALSE, warning=FALSE, results='hide'}
+library(spCorr)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(MASS)
+library(scales)
+library(viridis)
+```
+
+## Introduction 
+
+In this tutorial we will demonstrate the ability of **spCorr** to detect and adapt to diverse spatial correlation patterns. Then, we will visualize the estimated correlation structures by running **spCorr** and compare with the true correlation structures.
+
+
+## Load the DLPFC data
+
+Here, we use a real spatial transcriptomics dataset DLPFC from **10x Visium** platform to obtain real tissue spatial coordinates [Maynard, K. R. *et al.*, 2021](https://www.nature.com/articles/s41593-020-00787-0). The purpose is to anchor the simulation in real-world tissue shapes, allowing spatial patterns to be generated over biologically relevant domains.
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+load("/Users/yuxinyin/Downloads/data_svg400_size_adj (1).RData") # provides data_svg400
+cov_mat <- data_svg400$cov_mat
+counts_in <- as.matrix(data_svg400$counts)
+gene_pair_list <- read.csv("/Users/yuxinyin/Downloads/gene_pair_list.csv")  
+```
+
+```{r load_data, eval=FALSE}
+# Load preprocessed DLPFC Visium data (provides 'data_svg400')
+load("data_svg400_size_adj.RData")  # Replace with your actual file path
+
+# Extract metadata and count matrix
+cov_mat <- data_svg400$cov_mat
+counts_in <- as.matrix(data_svg400$counts)
+
+# Load gene pair list (TF-target or known pairs)
+gene_pair_list <- read.csv("gene_pair_list.csv")
+```
+
+
+## Define spatial correlation fields
+
+In this step, users can define various spatial correlation structures (e.g., elliptical, circular, and ring-shaped) based on real data. These describe how gene-gene correlations vary across space. 
+
+```{r data_prepare}
+sim_corr_shape <- function(cov_mat,
+                           shape = c("ellipse", "circle", "ring"),
+                           strength = 1.5,
+                           seed = 123) {
+  shape <- match.arg(shape)
+  set.seed(seed)
+  
+  x <- cov_mat$x1
+  y <- cov_mat$x2
+  x_n <- (x - min(x)) / diff(range(x))
+  y_n <- (y - min(y)) / diff(range(y))
+
+  if (shape == "ellipse") {
+    ctr <- c(mean(x), mean(y))
+    ang <- pi / 4
+    a <- diff(range(x)) * 0.30
+    b <- diff(range(y)) * 0.10
+    xr <- (x - ctr[1]) * cos(ang) - (y - ctr[2]) * sin(ang)
+    yr <- (x - ctr[1]) * sin(ang) + (y - ctr[2]) * cos(ang)
+    dist <- sqrt((xr^2 / a^2) + (yr^2 / b^2))
+    rho <- tanh(3 - 2.3 * sqrt(dist))
+
+  } else if (shape == "circle") {
+    cx <- mean(x_n); cy <- mean(y_n)
+    r  <- sqrt((x_n - cx)^2 + (y_n - cy)^2)
+    rho <- exp(-((r / 0.35)^2)) * 2 - 1
+
+  } else if (shape == "ring") {
+    cx <- mean(x_n); cy <- mean(y_n)
+    r  <- sqrt((x_n - cx)^2 + (y_n - cy)^2)
+    r0 <- 0.40; sigma <- 0.08
+    rho <- exp(-((r - r0)^2) / (2 * sigma^2)) * 2 - 1
+
+  }
+
+  pmin(pmax(rho * strength, -0.99), 0.99)
+}
+
+
+```
+
+
+
+### Visualization of the true fields
+
+We can have a quick look at the true correlation fields, which serves as a reference to assess how well the estimated correlations match these simulated patterns. 
+
+```{r, fig.align='center'}
+shapes <- c("ellipse","circle","ring")
+
+df_true <- purrr::map_df(c("circle","ellipse","ring"), function(sh) {
+  tibble(
+    spot = rownames(cov_mat),
+    x1   = cov_mat$x1,
+    x2   = cov_mat$x2,
+    rho  = sim_corr_shape(cov_mat, shape = sh, strength = 1.5),
+    shape = sh
+  )
+})
+
+ggplot(df_true, aes(x1, -x2, color = rho)) +
+  geom_point(size = 0.6) +
+  facet_wrap(~shape, nrow = 1) +
+  scale_color_gradientn(
+    colors = c("blue", "white", "red"),
+    values = scales::rescale(c(-1, 0, 1)),
+    limits = c(-1, 1)
+  ) +
+  coord_fixed() +
+  theme_minimal(base_size = 11) +
+  labs(title = "User-defined correlation fields ρ(s)",
+       color = expression(rho))
+```
+
+
+## Simulate correlated counts
+
+Based on the defined spatial fields, we can then simulate count data for gene pairs:
+
+- Spot coordinates, library sizes, and layer annotations are extracted from the real Visium DLPFC dataset [Maynard, K. R. *et al.*, 2021](https://www.nature.com/articles/s41593-020-00787-0).
+
+- Spatially varying correlation patterns (`rho_vec`) are user-defined and injected using a bivariate log-normal model.
+
+- Final counts are simulated using Poisson sampling to mimmic realistic ST data.
+
+```{r}
+colnames(gene_pair_list) <- c("X", "tf", "target")
+head(gene_pair_list)
+```
+
+
+```{r, echo=FALSE}
+# 1. Prepare marginal means for a single gene pair
+
+prepare_gene_pair <- function(data_svg400, gene_pair_df) {
+  counts <- as.matrix(data_svg400$counts)
+  cov_mat <- data_svg400$cov_mat
+  lib_size <- cov_mat$library_size
+  
+  gene_pair <- as.character(unlist(gene_pair_df[1, c("tf", "target")]))
+  stopifnot(all(gene_pair %in% rownames(counts)))
+  
+  # Extract real expression counts
+  y1 <- counts[gene_pair[1], ]
+  y2 <- counts[gene_pair[2], ]
+  
+  # Compute baseline means per layer (normalized by library size)
+  df <- data.frame(y1 = y1, y2 = y2, cov_mat) |>
+    dplyr::group_by(layer_annotations) |>
+    dplyr::mutate(mu1 = mean(y1 / library_size),
+                  mu2 = mean(y2 / library_size)) |>
+    dplyr::ungroup()
+  
+  list(df = df, gene_pair = gene_pair)
+}
+
+
+
+# 2. Simulate correlated counts for one gene pair
+
+simulate_pair_counts_single <- function(df, rho_vec, gene_pair, lib_size, sigma = 1) {
+  
+  sample_biv_logn <- function(mu_vec, rho, sigma = 1) {
+    Sig <- matrix(c(sigma^2, rho * sigma^2, rho * sigma^2, sigma^2), 2)
+    exp(MASS::mvrnorm(1, mu_vec, Sig))
+  }
+  
+  lam <- t(apply(cbind(df$mu1, df$mu2, rho_vec), 1, function(r) {
+    sample_biv_logn(log(pmax(as.numeric(r[1:2]), 1e-10)), as.numeric(r[3]))
+  }))
+  
+  y1_sim <- rpois(nrow(lam), lam[, 1] * lib_size)
+  y2_sim <- rpois(nrow(lam), lam[, 2] * lib_size)
+  
+  count_mat <- rbind(y1_sim, y2_sim)
+  rownames(count_mat) <- gene_pair
+  colnames(count_mat) <- NULL
+  
+  list(count_mat = count_mat)
+}
+
+
+
+# 3. Simulate multiple pairs under one correlation shape
+
+simulate_multiple_pairs <- function(data_svg400, rho_vec, gene_pair_list, n_pairs = 10, seed = 1) {
+  set.seed(seed)
+  cov_mat <- data_svg400$cov_mat
+  lib_size <- cov_mat$library_size
+  
+  sel <- sample(seq_len(nrow(gene_pair_list)), n_pairs)
+  results <- list()
+  
+  for (i in seq_along(sel)) {
+    gp <- gene_pair_list[sel[i], ]
+    
+    prep <- prepare_gene_pair(data_svg400, gp)
+    sim <- simulate_pair_counts_single(prep$df, rho_vec, prep$gene_pair, lib_size)
+    
+    pair_name <- paste(prep$gene_pair, collapse = "_")
+    results[[pair_name]] <- list(
+      counts   = sim$count_mat,
+      gene_list = prep$gene_pair,
+      pair_df   = data.frame(tf = prep$gene_pair[1],
+                             target = prep$gene_pair[2],
+                             row.names = pair_name),
+      cov_mat   = cov_mat,
+      rho_true  = rho_vec
+    )
+  }
+  
+  results
+}
+
+
+
+
+```
+
+
+```{r}
+sim_data <- list()
+pairs_per_shape <- 10 
+for (sh in shapes) {
+  cat("Simulating shape:", sh, "\n")
+  rho_vec <- sim_corr_shape(data_svg400$cov_mat, shape = sh, strength = 1.5)
+  
+  sim_data[[sh]] <- simulate_multiple_pairs(
+    data_svg400 = data_svg400,
+    rho_vec = rho_vec,
+    gene_pair_list = gene_pair_list,
+    n_pairs = pairs_per_shape
+  )
+}
+
+
+```
+
+
+
+
+
+## Run spCorr
+
+We now apply the **spCorr** to transform the data using a Gaussian copula and model correlation as a function of spatial coordinates using quasi-GAMs. This step estimates the local correlation patterns without assuming a fixed global correlation.
+
+
+```{r}
+results <- list()
+
+for (sh in shapes) {
+  cat("Running spCorr for shape:", sh, "\n")
+  sim_list <- sim_data[[sh]]
+  
+  for (nm in names(sim_list)) {
+    sim <- sim_list[[nm]]
+    rownames(sim$counts) <- sim$gene_list
+
+    fit <- spCorr(
+      sim$counts,
+      sim$gene_list,
+      sim$pair_df,
+      sim$cov_mat,
+      formula1 = "layer_annotations",
+      family1 = "nb",
+      formula2 = paste0("s(x1, x2, bs='tp', k=", 50, ")"),
+      family2 = quasiproductr(),
+      DT = TRUE,
+      global_test = "lrt",
+      ncores = 8,
+      seed = 123
+    )
+
+    # add shape prefix to make key unique
+    pair_name <- paste(sh, sim$pair_df$tf, sim$pair_df$target, sep = "_")
+    rho_est <- as.vector(fit$res_local[paste(sim$pair_df$tf, sim$pair_df$target, sep = "_"), ])
+
+    results[[pair_name]] <- list(
+      shape = sh,
+      tf = sim$pair_df$tf,
+      target = sim$pair_df$target,
+      rho_true = sim$rho_true,
+      rho_est = rho_est,
+      spcorr_result = fit
+    )
+  }
+}
+```
+
+
+## Compare true vs. estimated correlations
+
+In this section, we evaluate the performance of spCorr by comparing its estimated correlation fields to the ground-truth correlation fields generated earlier.
+
+
+### Estimated Correlation Structures
+
+Estimated spatial correlation maps are visualized and compared to the original patterns. Based on the results, we can see that **spCorr** successfully recover the shapes of the three simulated correlation fields. 
+
+```{r}
+df_est <- purrr::imap_dfr(results, function(obj, nm) {
+  tibble(
+    x1    = data_svg400$cov_mat$x1,
+    x2    = data_svg400$cov_mat$x2,
+    rho   = obj$rho_est,
+    shape = obj$shape
+  )
+})
+```
+
+
+```{r}
+df_est_avg <- df_est %>%
+  group_by(shape, x1, x2) %>%
+  summarise(rho = mean(rho, na.rm = TRUE), .groups = "drop")
+
+```
+
+```{r, fig.align='center'}
+ggplot(df_est_avg, aes(x1, -x2, color = rho)) +
+  geom_point(size = 0.6) +
+  facet_wrap(~shape, nrow = 1) +
+  scale_color_gradientn(
+    colors = c("blue", "white", "red"),
+    values = rescale(c(-1, 0, 1)),
+    limits = c(-1, 1)
+  ) +
+  coord_fixed() +
+  theme_minimal(base_size = 12) +
+  labs(
+    title = "spCorr-estimated correlation structures ρ̂(s)",
+    color = expression(hat(rho))
+  )
+```
+
+
+### Spearman Correlation
+
+Finally, quantitative comparison is made by computing Spearman correlation between true and estimated correlation values.
+
+```{r}
+
+spearman_df <- bind_rows(lapply(results, function(x) {
+  tibble(
+    shape = x$shape,
+    tf = x$tf,
+    target = x$target,
+    spearman = suppressWarnings(cor(x$rho_true, x$rho_est, method = "spearman"))
+  )
+}))
+
+```
+
+
+
+
+```{r, fig.align='center'}
+ggplot(spearman_df, aes(shape, spearman, fill = shape)) +
+  geom_boxplot(width = 0.6, alpha = 0.7, outlier.size = 1) +
+  geom_jitter(width = 0.15, size = 1, alpha = 0.6) +
+  geom_hline(yintercept = 0.8, linetype = 2) +
+  scale_fill_viridis_d() +
+  theme_minimal(base_size = 12) +
+  labs(
+    title = "Spearman(ρ̂, ρ) across correlation shapes",
+    x = "Shape of simulated correlation field",
+    y = "Spearman correlation"
+  ) +
+  ylim(0, 1)
+
+```
+
+
+
+
+## Session Info
+
+```{r}
+sessionInfo()
+```
+
+
+
