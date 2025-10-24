@@ -17,8 +17,8 @@ navbar:
       menu:
         - text: "Modeling spatially varying gene correlation across 2D space"
           href: articles/spCorr-2D.html
-	- text: "Semi-synthetic simulation for user-defined correlation structures"
-          href: articles/semi_synthetic_sim.html
+	      - text: "Tutorial 2: Semi-synthetic simulation for user-defined correlation structures"
+          href: articles/spCorr-simulation.html
     github:
       icon: fab fa-github
       href: https://github.com/chexjiang/spCorr
