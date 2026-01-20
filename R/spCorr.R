@@ -130,7 +130,6 @@ spCorr <- function(count_mat,
   gene_pair_list_subset <- check_product_res$gene_pair_list_subset
 
 
-
   ## Fit product distributions to gene_pair_list_subset
   message("Start Product Fitting for ", nrow(gene_pair_list), " gene pairs")
   product_res_list <- fit_products(
@@ -148,11 +147,11 @@ spCorr <- function(count_mat,
   )
 
   ## Extract the global testing result
-  res_global <- do.call(c, lapply(product_res_list, function(x) {
+  pval <- do.call(c, lapply(product_res_list, function(x) {
     tryCatch(x$res_global$global_p, error = function(e) NULL)
   }))
-  if (!is.null(res_global) && length(res_global) > 0) {
-    res_global <- p.adjust(res_global, method = "fdr")
+  if (!is.null(pval) && length(pval) > 0) {
+    fdr <- p.adjust(pval, method = "fdr")
   }
 
   ## Extract the global edf
@@ -179,7 +178,8 @@ spCorr <- function(count_mat,
     # Model
     model_list <- lapply(product_res_list, function(x) x$model)
     return(list(
-      res_global = res_global,
+      pval = pval,
+      fdr = fdr,
       edf = edf,
       res_local = res_local,
       res_local_pi = res_local_pi,
@@ -203,7 +203,8 @@ spCorr <- function(count_mat,
   } else {
     # Fitted values
     return(list(
-      res_global = res_global,
+      pval = pval,
+      fdr = fdr,
       edf = edf,
       res_local = res_local,
       res_local_pi = res_local_pi,

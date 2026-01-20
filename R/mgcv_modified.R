@@ -182,7 +182,6 @@ fix.family.link.family <- function(fam)
 } ## fix.family.link.family
 
 
-
 #' @export
 fix.family.var <- function(fam)
                            # adds dvar the derivative of the variance function w.r.t. mu

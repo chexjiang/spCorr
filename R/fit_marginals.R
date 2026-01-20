@@ -135,7 +135,6 @@ fit_marginal <- function(gene,
   }
 
 
-
   # Get parameters
   get_params <- switch(family1,
     gaussian = {

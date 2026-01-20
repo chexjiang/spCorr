@@ -84,9 +84,6 @@ check_products <- function(gene_pair_list,
 }
 
 
-
-
-
 return_product_list <- function(gene_pair_list,
                                 marginals,
                                 cov_mat,
@@ -108,7 +105,6 @@ return_product_list <- function(gene_pair_list,
 
   return(product_list)
 }
-
 
 
 fit_products_morani <- function(product_list,
