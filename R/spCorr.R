@@ -194,7 +194,8 @@ spCorr <- function(count_mat,
     })
 
     return(list(
-      res_global = res_global,
+      pval = pval,
+      fdr = fdr,
       edf = edf,
       marginals = marginals,
       residuals = residuals,

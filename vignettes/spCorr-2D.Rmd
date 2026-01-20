@@ -18,12 +18,17 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+
+```{r}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-tools::R_user_dir("mcRigor", which="cache")
+tools::R_user_dir("spCorr", which = "cache")
 ```
 
 ```{r setup, message=FALSE, warning=FALSE, results='hide'}
@@ -48,6 +53,7 @@ In this example, we analyze a subset of the **human oral squamous cell carcinoma
 ## Load example spatial transcriptomics data
 # It contains two objects: counts (gene expression matrix) and cov_mat (spot-level covariates)
 load(url("https://figshare.com/ndownloader/files/58905268"))
+
 # counts: gene expression count matrix (genes x spots)
 print(dim(counts))
 
@@ -57,7 +63,7 @@ head(cov_mat)
 
 ## Load TF–target gene pairs
 tf_df <- readRDS(url("https://figshare.com/ndownloader/files/58905265"))
-tf_df <- tf_df[tf_df$type=="Activation" | tf_df$type=="Unknown",]
+tf_df <- tf_df[tf_df$type == "Activation" | tf_df$type == "Unknown", ]
 head(tf_df)
 ```
 
@@ -83,21 +89,22 @@ We now apply **spCorr** to infer spot-level gene–gene correlations for the sel
 
 ```{r run_spCorr}
 res <- spCorr(counts,
-             gene_list,
-             gene_pair_list,
-             cov_mat,
-             formula1 = "tumor_annotations",
-             family1 = "nb",
-             formula2 = "s(x1, x2, bs='tp', k=30)",
-             family2 = quasiproductr(),
-             DT = TRUE,
-             global_test = "lrt",
-             return_models = FALSE,
-             return_coefs = FALSE,
-             check_morani = FALSE,
-             preconstruct_smoother = FALSE,
-             ncores = 10,
-             seed = 123)
+  gene_list,
+  gene_pair_list,
+  cov_mat,
+  formula1 = "tumor_annotations",
+  family1 = "nb",
+  formula2 = "s(x1, x2, bs='tp', k=30)",
+  family2 = quasiproductr(),
+  DT = TRUE,
+  global_test = "lrt",
+  return_models = FALSE,
+  return_coefs = FALSE,
+  check_morani = FALSE,
+  preconstruct_smoother = FALSE,
+  ncores = 10,
+  seed = 123
+)
 ```
 
 
@@ -112,16 +119,21 @@ We next visualize the inferred spot-level correlations and SVC patterns for spec
 ```{r p_corr, fig.width=9, fig.height=4, out.width='100%', fig.align='center'}
 # Specify gene pairs to visualize
 gene_pair <- c("ELF3_SPRR1B", "ELF3_SPRR3", "ELF3_SPRR2A", "ELF3_SPRR1A", "ELF3_CLDN7")
-rho_mat <- t(res$res_local[gene_pair, , drop = FALSE])  # spots × gene pairs
+rho_mat <- t(res$res_local[gene_pair, , drop = FALSE]) # spots × gene pairs
 
 # Combine with covariates and reshape to long format
-plot_data <- cbind(cov_mat, rho_mat) %>% as.data.frame() %>% pivot_longer(cols = all_of(gene_pair), names_to = "gene_pair", values_to = "rho")
+plot_data <- cbind(cov_mat, rho_mat) %>%
+  as.data.frame() %>%
+  pivot_longer(cols = all_of(gene_pair), names_to = "gene_pair", values_to = "rho")
 
 p_corr <- ggplot(plot_data, aes(x = x2, y = -x1, color = rho)) +
-  geom_point(size = 0.3) + scale_color_gradientn(colors = viridis_pal(option = "magma")(10), name = "correlation") +
-  coord_fixed(ratio = 1) + labs(x = NULL, y = NULL) +
+  geom_point(size = 0.3) +
+  scale_color_gradientn(colors = viridis_pal(option = "magma")(10), name = "correlation") +
+  coord_fixed(ratio = 1) +
+  labs(x = NULL, y = NULL) +
   facet_wrap(~gene_pair, nrow = 1) +
-  theme_minimal() + theme(
+  theme_minimal() +
+  theme(
     axis.text = element_blank(),
     panel.border = element_rect(color = "black", fill = NA, linewidth = 0.2),
     strip.background = element_rect(color = "black", fill = NA, linewidth = 0.2)
