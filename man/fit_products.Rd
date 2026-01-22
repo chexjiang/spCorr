@@ -16,6 +16,7 @@ fit_products(
   critical_value = 0.05,
   return_models = FALSE,
   return_coefs = FALSE,
+  return_pi = FALSE,
   preconstruct_smoother = FALSE
 )
 }
@@ -39,6 +40,8 @@ fit_products(
 \item{return_models}{Logical; if \code{TRUE}, returns the full model object for each gene pair.}
 
 \item{return_coefs}{Logical; if \code{TRUE}, returns model coefficients and variance-covariance matrices.}
+
+\item{return_pi}{Logical; if \code{TRUE}, returns predicted interval for fitted correlation.}
 
 \item{preconstruct_smoother}{Logical; if \code{TRUE}, modifies the smoother basis (e.g., \code{'tp'} to \code{'tpcached'}) for caching and speed optimization. Default is \code{FALSE}.}
 }

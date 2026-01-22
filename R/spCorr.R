@@ -75,9 +75,10 @@ spCorr <- function(count_mat,
                    formula2 = "s(x1, x2, bs='tp', k=50)",
                    family2 = quasiproductr(),
                    DT = TRUE,
-                   global_test = "wald",
+                   global_test = "lrt",
                    return_models = FALSE,
                    return_coefs = FALSE,
+                   return_pi = FALSE,
                    check_morani = FALSE,
                    preconstruct_smoother = TRUE,
                    ncores = 2,
@@ -118,7 +119,7 @@ spCorr <- function(count_mat,
 
 
   ## Check and subset spatially varying cross product
-  message("Start Extracting Spatially Varying Gene Pairs")
+  if (check_morani) message("Start Extracting Spatially Varying Gene Pairs")
   check_product_res <- check_products(
     gene_pair_list = gene_pair_list,
     marginals = marginals,
@@ -131,7 +132,7 @@ spCorr <- function(count_mat,
 
 
   ## Fit product distributions to gene_pair_list_subset
-  message("Start Product Fitting for ", nrow(gene_pair_list), " gene pairs")
+  message("Start Cross-Product Fitting for ", nrow(gene_pair_list), " gene pairs")
   product_res_list <- fit_products(
     gene_pair_list_subset = gene_pair_list_subset,
     product_list = product_list,
@@ -143,6 +144,7 @@ spCorr <- function(count_mat,
     global_test = global_test,
     return_models = return_models,
     return_coefs = return_coefs,
+    return_pi = return_pi,
     preconstruct_smoother = preconstruct_smoother
   )
 
@@ -150,6 +152,7 @@ spCorr <- function(count_mat,
   pval <- do.call(c, lapply(product_res_list, function(x) {
     tryCatch(x$res_global$global_p, error = function(e) NULL)
   }))
+  fdr <- NULL
   if (!is.null(pval) && length(pval) > 0) {
     fdr <- p.adjust(pval, method = "fdr")
   }

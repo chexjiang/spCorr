@@ -6,7 +6,7 @@ styler::style_pkg()
 devtools::document()
 devtools::build()
 devtools::install()
-
+devtools::check()
 
 library(spCorr)
 data(test_data)

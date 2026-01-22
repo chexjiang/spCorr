@@ -14,6 +14,7 @@
 #' @param global_test Method for global testing in product models. Options: `"lrt"` (likelihood ratio test) or `"wald"` (Wald-style smooth term test). Default is `"wald"`.
 #' @param return_models Logical; if `TRUE`, returns the full model object for each gene pair.
 #' @param return_coefs Logical; if `TRUE`, returns model coefficients and variance-covariance matrices.
+#' @param return_pi Logical; if `TRUE`, returns predicted interval for fitted correlation.
 #' @param preconstruct_smoother Logical; if `TRUE`, modifies the smoother basis (e.g., `'tp'` to `'tpcached'`) for caching and speed optimization. Default is `FALSE`.
 #'
 #' @return A list where each element corresponds to a gene pair. The contents depend on `return_models` and `return_coefs`:
@@ -76,6 +77,7 @@ fit_products <- function(gene_pair_list_subset,
                          critical_value = 0.05,
                          return_models = FALSE,
                          return_coefs = FALSE,
+                         return_pi = FALSE,
                          preconstruct_smoother = FALSE) {
   # Subset product list based on morani result
   product_list <- product_list[row.names(gene_pair_list_subset)]
@@ -109,6 +111,7 @@ fit_product <- function(product,
                         return_models = FALSE,
                         return_coefs = FALSE,
                         critical_value = 0.05,
+                        return_pi = FALSE,
                         preconstruct_smoother) {
   # Extract product of expressions
   dat <- cbind(z = product, cov_mat)
@@ -164,26 +167,30 @@ fit_product <- function(product,
   fitted_rho <- model$fitted.values
 
   # Extracting predicted interval of fitted values
-  p <- predict(model, type = "link", se.fit = TRUE) # include standard errors
-  z_val <- qnorm(1 - critical_value / 2)
-  fit_link <- p$fit
-  se_link <- p$se.fit
-  upper_link <- fit_link + z_val * se_link
-  lower_link <- fit_link - z_val * se_link
-  # Transform to response scale using the inverse link
-  inv_link <- model$family$linkinv
-  fit_response <- inv_link(fit_link)
-  upper_response <- inv_link(upper_link)
-  lower_response <- inv_link(lower_link)
-  pred_interval <- data.frame(
-    lower = lower_response,
-    upper = upper_response
-  )
+  if (return_pi) {
+    p <- predict(model, type = "link", se.fit = TRUE) # include standard errors
+    z_val <- qnorm(1 - critical_value / 2)
+    fit_link <- p$fit
+    se_link <- p$se.fit
+    upper_link <- fit_link + z_val * se_link
+    lower_link <- fit_link - z_val * se_link
+    # Transform to response scale using the inverse link
+    inv_link <- model$family$linkinv
+    fit_response <- inv_link(fit_link)
+    upper_response <- inv_link(upper_link)
+    lower_response <- inv_link(lower_link)
+    pred_interval <- data.frame(
+      lower = lower_response,
+      upper = upper_response
+    )
+  } else {
+    pred_interval <- NULL
+  }
 
 
-  # Default is only return fitted values
+  # Default is to return global testing result and local correlation estimate
   if (return_models) {
-    # Model
+    # Include model
     return(list(
       res_global = res_global,
       fitted_rho = fitted_rho,
@@ -191,7 +198,7 @@ fit_product <- function(product,
       model = model
     ))
   } else if (return_coefs) {
-    # Model coef
+    # Only return model coef
     # Extracting estimation result from model
     beta <- coef(model)
     beta_cov <- vcov(model)

@@ -19,10 +19,6 @@ vignette: >
 ---
 
 
-```{r}
-knitr::opts_chunk$set(eval = FALSE)
-```
-
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -52,7 +48,8 @@ In this example, we analyze a subset of the **human oral squamous cell carcinoma
 ```{r data_load, message=FALSE, warning=FALSE}
 ## Load example spatial transcriptomics data
 # It contains two objects: counts (gene expression matrix) and cov_mat (spot-level covariates)
-load(url("https://figshare.com/ndownloader/files/58905268"))
+# load(url("https://figshare.com/ndownloader/files/58905268"))
+load(system.file("data", "spCorr_2D_data.RData", package = "spCorr"))
 
 # counts: gene expression count matrix (genes x spots)
 print(dim(counts))
@@ -62,7 +59,7 @@ print(dim(cov_mat))
 head(cov_mat)
 
 ## Load TF–target gene pairs
-tf_df <- readRDS(url("https://figshare.com/ndownloader/files/58905265"))
+tf_df <- readRDS(system.file("data", "spCorr_2D_gene.rds", package = "spCorr"))
 tf_df <- tf_df[tf_df$type == "Activation" | tf_df$type == "Unknown", ]
 head(tf_df)
 ```
@@ -100,6 +97,7 @@ res <- spCorr(counts,
   global_test = "lrt",
   return_models = FALSE,
   return_coefs = FALSE,
+  return_pi = TRUE,
   check_morani = FALSE,
   preconstruct_smoother = FALSE,
   ncores = 10,
@@ -143,10 +141,10 @@ p_corr
 
 ## Identify gene pairs with significant SVC patterns
 
-The **spCorr** also provides SVC testing to identify gene pairs whose correlations vary significantly across spatial locations. The BH-adjusted *p*-values from the SVC testing are stored in `res$res_global`.
+The **spCorr** also provides SVC testing to identify gene pairs whose correlations vary significantly across spatial locations. The BH-adjusted *p*-values from the SVC testing are stored in `res$fdr`.
 
 ```{r svc_test}
-pval_svc <- res$res_global
+pval_svc <- res$fdr
 gene_pair_sig <- which(pval_svc < 0.05)
 cat("Number of gene pairs with significant SVC patterns (FDR < 0.05):", length(gene_pair_sig), "\n")
 ```
