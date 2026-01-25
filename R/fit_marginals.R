@@ -182,7 +182,7 @@ fit_marginal <- function(gene,
   family_frame <- cbind(y, get_params$mean_vec, get_params$theta_vec, get_params$zero_vec)
 
   calc_pvec <- function(x) {
-    set.seed(seed)
+    # set.seed(seed)
     switch(family1,
       gaussian = gamlss.dist::pNO(x[1], mu = x[2], sigma = abs(x[3])),
       poisson = stats::ppois(x[1], lambda = x[2]),
@@ -196,7 +196,7 @@ fit_marginal <- function(gene,
   # Apply discrete transformation if necessary
   if (DT && family1 %in% c("poisson", "nb", "zinb")) {
     calc_pvec2 <- function(x) {
-      set.seed(seed)
+      # set.seed(seed)
       switch(family1,
         poisson = stats::ppois(x[1] - 1, lambda = x[2]),
         nb = stats::pnbinom(x[1] - 1, mu = x[2], size = x[3]),
@@ -209,7 +209,7 @@ fit_marginal <- function(gene,
 
     pvec2 <- apply(family_frame, 1, calc_pvec2)
 
-    set.seed(seed)
+    # set.seed(seed)
     v <- stats::runif(length(pvec))
     r <- pvec * v + pvec2 * (1 - v)
   } else {

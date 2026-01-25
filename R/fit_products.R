@@ -93,6 +93,7 @@ fit_products <- function(gene_pair_list_subset,
       global_test = global_test,
       return_models = return_models,
       return_coefs = return_coefs,
+      return_pi = return_pi,
       critical_value = critical_value,
       preconstruct_smoother = preconstruct_smoother
     )

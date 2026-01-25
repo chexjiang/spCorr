@@ -59,7 +59,7 @@
 Department of Statistics and Data Science, University of California, Los
 Angeles<br><a href="mailto:cflorajiang@g.ucla.edu" class="email">cflorajiang@g.ucla.edu</a></p>
             
-            <h4 data-toc-skip class="date">21 January 2026</h4>
+            <h4 data-toc-skip class="date">24 January 2026</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/chexjiang/spCorr/blob/HEAD/vignettes/spCorr-2D.Rmd" class="external-link"><code>vignettes/spCorr-2D.Rmd</code></a></small>
       <div class="d-none name"><code>spCorr-2D.Rmd</code></div>
@@ -185,18 +185,18 @@ space.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">res</span>, max.level <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 7</span></span>
-<span><span class="co">#&gt;  $ pval        : Named num [1:1316] 0.4383 0.0245 0.1655 0.3604 0.4632 ...</span></span>
+<span><span class="co">#&gt;  $ pval        : Named num [1:1316] 0.4846 0.0531 0.1004 0.4881 0.1349 ...</span></span>
 <span><span class="co">#&gt;   ..- attr(*, "names")= chr [1:1316] "AATF_CDKN1A" "AATF_MYC" "ABL1_BAX" "ABL1_CCND2" ...</span></span>
-<span><span class="co">#&gt;  $ fdr         : Named num [1:1316] 0.483 0.0795 0.2519 0.42 0.5005 ...</span></span>
+<span><span class="co">#&gt;  $ fdr         : Named num [1:1316] 0.653 0.344 0.402 0.653 0.441 ...</span></span>
 <span><span class="co">#&gt;   ..- attr(*, "names")= chr [1:1316] "AATF_CDKN1A" "AATF_MYC" "ABL1_BAX" "ABL1_CCND2" ...</span></span>
-<span><span class="co">#&gt;  $ edf         : Named num [1:1316] 13.1 17.3 20.3 12.2 14.7 ...</span></span>
+<span><span class="co">#&gt;  $ edf         : Named num [1:1316] 13.44 11.79 6.13 3 16.3 ...</span></span>
 <span><span class="co">#&gt;   ..- attr(*, "names")= chr [1:1316] "AATF_CDKN1A" "AATF_MYC" "ABL1_BAX" "ABL1_CCND2" ...</span></span>
-<span><span class="co">#&gt;  $ res_local   : num [1:1316, 1:1747] 0.226 0.67 0.57 0.633 0.233 ...</span></span>
+<span><span class="co">#&gt;  $ res_local   : num [1:1316, 1:1747] -0.0325 0.1619 0.1598 -0.0467 0.0629 ...</span></span>
 <span><span class="co">#&gt;   ..- attr(*, "dimnames")=List of 2</span></span>
 <span><span class="co">#&gt;  $ res_local_pi:List of 1316</span></span>
-<span><span class="co">#&gt;  $ residuals   : num [1:601, 1:1747] 0.237 0.251 0.231 0.244 0.201 ...</span></span>
+<span><span class="co">#&gt;  $ residuals   : num [1:601, 1:1747] 0.1008 0.5443 0.0936 0.1168 0.0915 ...</span></span>
 <span><span class="co">#&gt;   ..- attr(*, "dimnames")=List of 2</span></span>
-<span><span class="co">#&gt;  $ marginals   : num [1:601, 1:1747] -0.716 -0.67 -0.737 -0.694 -0.837 ...</span></span>
+<span><span class="co">#&gt;  $ marginals   : num [1:601, 1:1747] -1.277 0.111 -1.319 -1.191 -1.332 ...</span></span>
 <span><span class="co">#&gt;   ..- attr(*, "dimnames")=List of 2</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -242,7 +242,7 @@ stored in <code>res$fdr</code>.</p>
 <code class="sourceCode R"><span><span class="va">pval_svc</span> <span class="op">&lt;-</span> <span class="va">res</span><span class="op">$</span><span class="va">fdr</span></span>
 <span><span class="va">gene_pair_sig</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">pval_svc</span> <span class="op">&lt;</span> <span class="fl">0.05</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Number of gene pairs with significant SVC patterns (FDR &lt; 0.05):"</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">gene_pair_sig</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Number of gene pairs with significant SVC patterns (FDR &lt; 0.05): 294</span></span></code></pre></div>
+<span><span class="co">#&gt; Number of gene pairs with significant SVC patterns (FDR &lt; 0.05): 43</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="session-information">Session information<a class="anchor" aria-label="anchor" href="#session-information"></a>

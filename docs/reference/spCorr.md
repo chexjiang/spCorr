@@ -197,4 +197,5 @@ result <- spCorr(
 )
 #> Start Marginal Fitting for 20 genes
 #> Start Cross-Product Fitting for 10 gene pairs
+#> Warning: all scheduled cores encountered errors in user code
 ```

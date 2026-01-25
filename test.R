@@ -7,6 +7,7 @@ devtools::document()
 devtools::build()
 devtools::install()
 devtools::check()
+pkgdown::build_site()
 
 library(spCorr)
 data(test_data)
