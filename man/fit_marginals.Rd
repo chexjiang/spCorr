@@ -12,7 +12,7 @@ fit_marginals(
   family1,
   DT = TRUE,
   epsilon = 1e-06,
-  ncores = ncores,
+  ncores = 4,
   seed = 123
 )
 }

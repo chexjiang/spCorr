@@ -102,10 +102,54 @@ fit_marginal <- function(gene,
   sigma_formula <- "~1"
 
   # Fit the model based on the family
+  # fit_model <- function(family1) {
+  #   if (family1 == "poisson") {
+  #     fit <- mgcv::gam(mgcv_formula, data = dat, family = family1)
+  #   } else if (family1 == "nb") {
+  #     if (sigma_formula != "~1") {
+  #       dat$y <- round(dat$y)
+  #       fit <- gamlss::gamlss(
+  #         formula = mgcv_formula,
+  #         sigma.formula = sigma_formula,
+  #         data = dat,
+  #         family = gamlss.dist::NBI,
+  #         control = gamlss::gamlss.control(trace = FALSE, c.crit = 0.01)
+  #       )
+  #     } else {
+  #       fit <- mgcv::gam(mgcv_formula, data = dat, family = family1)
+  #     }
+  #   } else if (family1 == "zinb") {
+  #     dat$y <- round(dat$y)
+  #     sigma_formula <- stats::reformulate("1", response = "y")
+  #     fit <- suppressWarnings({
+  #       gamlss::gamlss(
+  #         formula = mgcv_formula,
+  #         sigma.formula = sigma_formula,
+  #         nu.formula = sigma_formula, ## Here nu is the dropout probability!
+  #         data = dat,
+  #         family = gamlss.dist::ZINBI,
+  #         control = gamlss::gamlss.control(trace = FALSE, c.crit = 0.01)
+  #       )
+  #     })
+  #
+  #     fit
+  #   }
+  # }
+
+  # Fit the model based on the family
   fit_model <- function(family1) {
+    ## -----------------------
+    ## Poisson
+    ## -----------------------
     if (family1 == "poisson") {
-      fit <- mgcv::gam(mgcv_formula, data = dat, family = family1)
-    } else if (family1 == "nb") {
+      fit <- mgcv::gam(mgcv_formula, data = dat, family = "poisson")
+      return(list(fit = fit, family_used = "poisson"))
+    }
+
+    ## -----------------------
+    ## NB (mgcv or gamlss)
+    ## -----------------------
+    if (family1 == "nb") {
       if (sigma_formula != "~1") {
         dat$y <- round(dat$y)
         fit <- gamlss::gamlss(
@@ -116,67 +160,94 @@ fit_marginal <- function(gene,
           control = gamlss::gamlss.control(trace = FALSE, c.crit = 0.01)
         )
       } else {
-        fit <- mgcv::gam(mgcv_formula, data = dat, family = family1)
+        fit <- mgcv::gam(mgcv_formula, data = dat, family = "nb")
       }
-    } else if (family1 == "zinb") {
-      dat$y <- round(dat$y)
-      sigma_formula <- stats::reformulate("1", response = "y")
-      fit <- suppressWarnings({
-        gamlss::gamlss(
-          formula = mgcv_formula,
-          sigma.formula = sigma_formula,
-          nu.formula = sigma_formula, ## Here nu is the dropout probability!
-          data = dat,
-          family = gamlss.dist::ZINBI,
-          control = gamlss::gamlss.control(trace = FALSE, c.crit = 0.01)
-        )
-      })
-
-      fit
+      return(list(fit = fit, family_used = "nb"))
     }
+
+    ## -----------------------
+    ## ZINB → fallback to NB
+    ## -----------------------
+    if (family1 == "zinb") {
+      dat$y <- round(dat$y)
+      sigma_formula <- ~1
+
+      fit_zinb <- tryCatch(
+        suppressWarnings(
+          gamlss::gamlss(
+            formula        = mgcv_formula,
+            sigma.formula  = sigma_formula,
+            nu.formula     = sigma_formula,
+            data           = dat,
+            family         = gamlss.dist::ZINBI,
+            control        = gamlss::gamlss.control(trace = FALSE, c.crit = 0.01)
+          )
+        ),
+        error = function(e) NULL
+      )
+
+      ## -----------------------
+      ## Check if ZINB is usable
+      ## -----------------------
+      zinb_ok <- !is.null(fit_zinb) &&
+        all(is.finite(fit_zinb$mu.fv)) &&
+        all(is.finite(fit_zinb$sigma.fv))
+
+      if (zinb_ok) {
+        return(list(fit = fit_zinb, family_used = "zinb"))
+      }
+
+      ## -----------------------
+      ## Fallback to NB
+      ## -----------------------
+      fit_nb2 <- mgcv::gam(mgcv_formula, data = dat, family = "nb")
+      return(list(fit = fit_nb2, family_used = "nb"))
+    }
+
+    stop("Unknown family1: ", family1)
   }
+
+  fm <- fit_model(family1)
+  res <- fm$fit
+  family_used <- fm$family_used
 
 
   # Get parameters
-  get_params <- switch(family1,
+  get_params <- switch(family_used,
     gaussian = {
-      res <- fit_model("gaussian")
       list(
-        mean_vec = stats::predict(res, type = "response"),
+        mean_vec  = stats::predict(res, type = "response"),
         theta_vec = rep(sqrt(res$sig2), nrow(y)),
-        zero_vec = rep(0, nrow(y))
+        zero_vec  = rep(0, nrow(y))
       )
     },
     poisson = {
-      res <- fit_model("poisson")
       list(
-        mean_vec = stats::predict(res, type = "response"),
+        mean_vec  = stats::predict(res, type = "response"),
         theta_vec = NA,
-        zero_vec = rep(0, nrow(y))
+        zero_vec  = rep(0, nrow(y))
       )
     },
     nb = {
-      res <- fit_model("nb")
-      if (class(res)[1] == "gam") {
+      if (inherits(res, "gam")) {
         list(
-          mean_vec = stats::predict(res, type = "response"),
+          mean_vec  = stats::predict(res, type = "response"),
           theta_vec = rep(res$family$getTheta(TRUE), nrow(y)),
-          zero_vec = rep(0, nrow(y))
+          zero_vec  = rep(0, nrow(y))
         )
-      } else if (class(res)[1] == "gamlss") {
+      } else if (inherits(res, "gamlss")) {
         list(
-          mean_vec = stats::predict(res, type = "response"),
-          theta_vec = 1 / stats::predict(res, type = "response", what = "sigma", data = dat),
-          zero_vec = rep(0, nrow(y))
+          mean_vec  = stats::predict(res, type = "response"),
+          theta_vec = 1 / stats::predict(res, what = "sigma", type = "response"),
+          zero_vec  = rep(0, nrow(y))
         )
       }
     },
     zinb = {
-      res <- fit_model("zinb")
       list(
-        mean_vec = stats::predict(res, type = "response"),
-        theta_vec = stats::predict(res, type = "response", what = "sigma", data = dat),
-        zero_vec = stats::predict(res, type = "response", what = "nu", data = dat)
+        mean_vec  = stats::predict(res, type = "response"),
+        theta_vec = stats::predict(res, what = "sigma", type = "response"),
+        zero_vec  = stats::predict(res, what = "nu", type = "response")
       )
     }
   )
@@ -185,7 +256,7 @@ fit_marginal <- function(gene,
 
   calc_pvec <- function(x) {
     # set.seed(seed)
-    switch(family1,
+    switch(family_used,
       gaussian = gamlss.dist::pNO(x[1], mu = x[2], sigma = abs(x[3])),
       poisson = stats::ppois(x[1], lambda = x[2]),
       nb = stats::pnbinom(x[1], mu = x[2], size = x[3]),
@@ -196,10 +267,10 @@ fit_marginal <- function(gene,
 
 
   # Apply discrete transformation if necessary
-  if (DT && family1 %in% c("poisson", "nb", "zinb")) {
+  if (DT && family_used %in% c("poisson", "nb", "zinb")) {
     calc_pvec2 <- function(x) {
       # set.seed(seed)
-      switch(family1,
+      switch(family_used,
         poisson = stats::ppois(x[1] - 1, lambda = x[2]),
         nb = stats::pnbinom(x[1] - 1, mu = x[2], size = x[3]),
         zinb = ifelse(x[1] > 0,
