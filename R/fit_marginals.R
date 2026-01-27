@@ -42,7 +42,7 @@ fit_marginals <- function(gene_list,
                           family1,
                           DT = TRUE,
                           epsilon = 1e-6,
-                          ncores = ncores,
+                          ncores = 4,
                           seed = 123) {
   # Apply fit_marginal to each gene in gene_list
   result <- parallel::mclapply(gene_list, function(gene) {
@@ -60,8 +60,10 @@ fit_marginals <- function(gene_list,
         )
       },
       error = function(e) {
-        message("Error with model: ", e$message)
-        return(NULL) # Return NULL if an error occurs
+        message("Gene failed: ", gene)
+        stop(e)
+        # message("  Error: ", e$message)
+        # return(NULL) # Return NULL if an error occurs
       }
     )
   }, mc.cores = ncores)
@@ -123,7 +125,7 @@ fit_marginal <- function(gene,
         gamlss::gamlss(
           formula = mgcv_formula,
           sigma.formula = sigma_formula,
-          nu.formula = mgcv_formula, ## Here nu is the dropout probability!
+          nu.formula = sigma_formula, ## Here nu is the dropout probability!
           data = dat,
           family = gamlss.dist::ZINBI,
           control = gamlss::gamlss.control(trace = FALSE, c.crit = 0.01)
