@@ -2,7 +2,7 @@
 
 The R package **spCorr** is a flexible and scalable framework for detecting and characterizing **spatially varying correlations (SVCs)** in spatial transcriptomics data. It provides (1) spot-level correlation estimates between gene pairs and (2) identifies gene pairs whose correlations vary across space or between tissue domains. The spCorr supports flexible modeling of spot-level covariates, directly models count data, and enables efficient, permutation-free statistical inference. The following figure illustrates the workflow of spCorr:
 
-![Workflow of spCorr](man/figures/fig1.jpg)
+![Workflow of spCorr](figures/fig1.jpg)
 
 
 ## Installation<a name="installation-"></a>
@@ -35,6 +35,7 @@ spCorr <- function(count_mat,
                    return_coefs = FALSE,
                    check_morani = FALSE,
                    preconstruct_smoother = FALSE,
+                   return_pi = FALSE,
                    ncores = 2,
                    control = list(),
                    epsilon = 1e-6,
@@ -66,9 +67,12 @@ The parameters of `spCorr()` are:
 
 - `global_test`: Method for global testing in product models. Options: `"lrt"` (likelihood ratio test) or `"wald"` (Wald-style smooth term test). Default is `"lrt"`.
 
+
 - `return_models`: Logical; if `TRUE`, return full GAM model objects. Default is `FALSE`.
 
 - `return_coefs` Logical; if `TRUE`, return model coefficients and covariance matrices. Default is `FALSE`.
+
+- `return_pi`: Logical; if `TRUE`, returns predicted intervals for fitted correlations. Default is `FALSE`.
 
 - `check_morani`: Logical; if `TRUE`, filters gene pairs using Moran's I on the product. Default is `FALSE`.
 
@@ -89,9 +93,9 @@ The parameters of `spCorr()` are:
 For all detailed tutorials, please check the [**website**](https://chexjiang.github.io/spCorr/).  
 The tutorials demonstrate the main functionalities of **spCorr**, including spot-level correlation inference and the identification of spatially varying correlation (SVC) patterns.
 
-- [**Tutorial 1:** Modeling spatially varying gene correlation across 2D space](articles/spCorr-2D.html)
+- [**Tutorial 1:** Modeling spatially varying gene correlation across 2D space](https://chexjiang.github.io/spCorr/articles/spCorr-2D.html)
 
-- [**Tutorial 2:** Modeling spatially varying gene correlation across 1D curve](articles/spCorr-1D.html)
+- [**Tutorial 2:** Modeling spatially varying gene correlation across 1D curve](https://chexjiang.github.io/spCorr/articles/spCorr-1D.html)
 
 
 
