@@ -19,7 +19,7 @@ spCorr(
   return_coefs = FALSE,
   return_pi = FALSE,
   check_morani = FALSE,
-  preconstruct_smoother = TRUE,
+  preconstruct_smoother = FALSE,
   ncores = 2,
   control = list(),
   epsilon = 1e-06,
@@ -50,6 +50,8 @@ spCorr(
 \item{return_models}{Logical; if \code{TRUE}, returns full GAM model objects for each gene pair. Default is \code{FALSE}.}
 
 \item{return_coefs}{Logical; if \code{TRUE}, returns model coefficients and variances. Default is \code{FALSE}.}
+
+\item{return_pi}{Logical; if \code{TRUE}, returns predicted intervals for fitted correlations. Default is \code{FALSE}.}
 
 \item{check_morani}{Logical; if \code{TRUE}, filters gene pairs using Moran's I on the product. Default is \code{FALSE}.}
 
@@ -102,6 +104,7 @@ result <- spCorr(
   global_test = "lrt",
   return_models = FALSE,
   return_coefs = FALSE,
+  return_pi = FALSE,
   check_morani = FALSE,
   preconstruct_smoother = TRUE,
   ncores = 2,

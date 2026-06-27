@@ -35,7 +35,9 @@ fit_products(
 
 \item{ncores}{Number of cores to use for parallel processing with \code{mclapply}.}
 
-\item{global_test}{Method for global testing in product models. Options: \code{"lrt"} (likelihood ratio test) or \code{"wald"} (Wald-style smooth term test). Default is \code{"wald"}.}
+\item{global_test}{Method for global testing in product models. Options: \code{"lrt"} (likelihood ratio test) or \code{"wald"} (Wald-style smooth term test). Default is \code{"lrt"}.}
+
+\item{critical_value}{The critical value for constructing confidence intervals. Default is 0.05 (for 95\% confidence intervals).}
 
 \item{return_models}{Logical; if \code{TRUE}, returns the full model object for each gene pair.}
 

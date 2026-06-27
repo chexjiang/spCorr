@@ -1,12 +1,13 @@
 ---
 title: "Modeling spatially varying gene correlation across 2D space"
-author: |
-  Chenxin (Flora) Jiang  
-  Department of Statistics and Data Science, University of California, Los Angeles  
-  <cflorajiang@g.ucla.edu>
+author: >
+  Chenxin (Flora) Jiang<br>
+  Department of Statistics and Data Science, University of California, Los Angeles<br>
+  <a href="mailto:cflorajiang@g.ucla.edu">cflorajiang@g.ucla.edu</a>
 date: "`r format(Sys.Date(), '%d %B %Y')`"
 output: 
   BiocStyle::html_document:
+    number_sections: false
     self_contained: yes
     toc: true
     toc_float: true
@@ -17,14 +18,10 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-
-
+  
+  
 ```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-tools::R_user_dir("spCorr", which = "cache")
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ```{r setup, message=FALSE, warning=FALSE, results='hide'}
@@ -33,6 +30,7 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(viridis)
+library(utils)
 ```
 
 ## Introduction
@@ -90,15 +88,8 @@ res <- spCorr(counts,
   gene_pair_list,
   cov_mat,
   formula1 = "tumor_annotations",
-  family1 = "nb",
   formula2 = "s(x1, x2, bs='tp', k=30)",
-  family2 = quasiproductr(),
-  DT = TRUE,
-  global_test = "lrt",
-  return_models = FALSE,
-  return_coefs = FALSE,
   return_pi = TRUE,
-  check_morani = FALSE,
   preconstruct_smoother = FALSE,
   ncores = 10,
   seed = 123

@@ -1,0 +1,178 @@
+---
+title: "Modeling spatially varying gene correlation across 1D curve"
+author: >
+  Chenxin (Flora) Jiang<br>
+  Department of Statistics and Data Science, University of California, Los Angeles<br>
+  <a href="mailto:cflorajiang@g.ucla.edu">cflorajiang@g.ucla.edu</a>
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output: 
+  BiocStyle::html_document:
+    number_sections: false
+    self_contained: yes
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    code_folding: show
+vignette: >
+  %\VignetteIndexEntry{spCorr-1D}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+tools::R_user_dir("spCorr", which = "cache")
+```
+
+```{r setup, message=FALSE, warning=FALSE, results='hide'}
+library(spCorr)
+library(Seurat)
+library(purrr)
+library(tibble)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(viridis)
+library(MorphoGAM)
+library(stats)
+library(utils)
+```
+
+## Introduction
+
+This tutorial demonstrates how to use **spCorr** to
+(i) infer spot-level gene–gene correlations for specified gene pairs, and
+(ii) identify gene pairs exhibiting *spatially varying correlation (SVC)* patterns across a 1D spatial curve.
+
+## Prepare input data
+
+In this example, we analyze a subset of the **mouse brain cortex** dataset generated using the **10x Xenium** platform. The dataset is provided by 10x Genomics as part of the “Fresh Frozen Mouse Brain for Xenium Explorer Demo,” available at [10x Genomics](https://www.10xgenomics.com/datasets/fresh-frozen-mouse-brain-for-xenium-explorer-demo-1-standard). 
+
+```{r data_load, message=FALSE, warning=FALSE, results='hide'}
+## Load example ST data
+# It contains a Seurat object
+tf <- tempfile(fileext = ".rds")
+utils::download.file("https://ndownloader.figshare.com/files/66021356", tf, mode = "wb")
+xenium.obj <- readRDS(tf)
+unlink(tf)
+
+xenium.obj <- UpdateSeuratObject(xenium.obj)
+xenium.obj$ccf_region <- gsub("1|2/3|4|5|6a|6b", "", xenium.obj$ccf) %>%
+  as.factor() %>%
+  droplevels()
+
+# Subset celltype L2/3 IT
+celltype <- "L2/3 IT"
+xenium_sub.obj <- xenium.obj[, xenium.obj$ensembled.celltype1 %in% celltype]
+```
+
+Now we prepare the input data for **spCorr** analysis.
+
+```{r data_prepare1}
+# Count matrix
+count_mat <- xenium_sub.obj[["Xenium"]]$counts
+# Covariate matrix
+cov_mat <- cbind(GetTissueCoordinates(xenium_sub.obj), xenium_sub.obj@meta.data)
+rownames(cov_mat) <- colnames(count_mat)
+```
+
+Next we will use **MorphoGAM** ([Nicol *et al.*, 2024](https://doi.org/10.1101/2024.11.21.624653)) to find the 1D spatial curve associated with the 2D spatial coordinates of the spots. The 1D curve will be used as a covariate in the **spCorr** analysis.
+
+```{r data_prepare2, fig.width=8, fig.height=4, fig.align='center'}
+# Use MorphoGAM to find the 1D spatial curve
+MorphoGAM_fit <- MorphoGAM::CurveFinder(cov_mat[, c("x", "y")] |> as.matrix(), knn = 5)
+cov_mat$t <- MorphoGAM_fit$xyt$t
+
+# (and plot)
+df <- MorphoGAM_fit$xyt %>% arrange(t)
+plot_curve <- ggplot(df, aes(x = x, y = y)) +
+  geom_point(color = "gray70") +
+  geom_path(aes(x = f1, y = f2, color = t)) +
+  labs(title = paste(celltype, ": 1D spatial curve from MorphoGAM")) +
+  scale_color_viridis_c(option = "magma") +
+  coord_fixed() +
+  scale_y_reverse() +
+  theme_minimal()
+plot_curve
+```
+
+In this tutorial, we will focus on a subset of 10 genes that are highly expressed in the L2/3 IT cell type. We will analyze all possible gene pairs among these 10 genes.
+
+```{r data_prepare3}
+gene_list <- c("Cux2", "Kcnh5", "Car4", "Rims3", "Bhlhe22", "Neurod6", "Gsg1l", "Cpne8", "Dpy19l1", "Cdh6")
+gene_pair_list <- t(combn(gene_list, 2))
+rownames(gene_pair_list) <- apply(gene_pair_list, 1, paste0, collapse = "_")
+```
+
+## Run spCorr
+
+We now apply **spCorr** to infer spot-level gene–gene correlations for the selected gene pairs and to identify gene pairs with spatially varying correlation (SVC) pattern across the 1D spatial curve.
+
+```{r run_spCorr}
+res <- spCorr(count_mat,
+  gene_list,
+  gene_pair_list,
+  cov_mat,
+  formula1 = "1",
+  formula2 = "s(t, bs='tp', k=8)",
+  return_pi = TRUE,
+  ncores = 5,
+  seed = 123
+)
+```
+
+
+
+## Visualize spot-level correlations 
+
+We next visualize the inferred spot-level correlations and SVC patterns for specific gene pairs. 
+
+```{r p_corr_t, fig.width=8, fig.height=4, fig.align='center'}
+# Use the top gene pairs with the smallest FDR values for visualization
+top_pairs <- names(sort(res$fdr))[1:6]
+
+# Assemble spot-level correlation estimates and their confidence intervals
+rho_df_long <- purrr::map_dfr(top_pairs, function(gp) {
+  tibble::tibble(
+    t = cov_mat$t, gene_pair = gp,
+    rho = as.numeric(res$res_local[gp, ]),
+    rho_lower = as.numeric(res$res_local_pi[[gp]]$lower),
+    rho_upper = as.numeric(res$res_local_pi[[gp]]$upper)
+  )
+}) %>%
+  dplyr::mutate(
+    rho_lower = pmax(rho_lower, -1),
+    rho_upper = pmin(rho_upper, 1),
+    gene_pair = factor(gene_pair, levels = top_pairs)
+  ) %>%
+  dplyr::arrange(gene_pair, t)
+
+# Visualize the estimated spot-level correlations along the 1D spatial curve
+p_corr_t <- ggplot(rho_df_long, aes(x = t, y = rho)) +
+  geom_ribbon(aes(ymin = rho_lower, ymax = rho_upper, group = gene_pair), fill = "purple", alpha = 0.25, color = NA) +
+  geom_line(aes(group = gene_pair), color = "purple", linewidth = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  facet_wrap(~gene_pair, nrow = 2) +
+  scale_x_continuous(breaks = c(0, 0.5, 1), labels = c("0", "0.5", "1")) +
+  scale_y_continuous(breaks = c(-1, 0, 1), limits = c(-1, 1)) +
+  labs(x = "t", y = "Correlation") +
+  theme_minimal() +
+  theme(
+    aspect.ratio = 1 / 2,
+    legend.position = "none",
+    panel.grid = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.2),
+    strip.background = element_rect(color = "black", fill = NA, linewidth = 0.2),
+    strip.text.x = element_text(face = "italic")
+  )
+p_corr_t
+```
+
+
+
+## Session information
+
+```{r}
+sessionInfo()
+```

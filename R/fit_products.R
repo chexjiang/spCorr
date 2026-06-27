@@ -11,7 +11,8 @@
 #' @param family2 A distribution family to be used for model fitting. Default is `quasiproductr()`, which must be defined elsewhere.
 #' @param control A list of control parameters passed to `mgcv::gam()`.
 #' @param ncores Number of cores to use for parallel processing with `mclapply`.
-#' @param global_test Method for global testing in product models. Options: `"lrt"` (likelihood ratio test) or `"wald"` (Wald-style smooth term test). Default is `"wald"`.
+#' @param global_test Method for global testing in product models. Options: `"lrt"` (likelihood ratio test) or `"wald"` (Wald-style smooth term test). Default is `"lrt"`.
+#' @param critical_value The critical value for constructing confidence intervals. Default is 0.05 (for 95% confidence intervals).
 #' @param return_models Logical; if `TRUE`, returns the full model object for each gene pair.
 #' @param return_coefs Logical; if `TRUE`, returns model coefficients and variance-covariance matrices.
 #' @param return_pi Logical; if `TRUE`, returns predicted interval for fitted correlation.

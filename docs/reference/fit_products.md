@@ -66,7 +66,12 @@ fit_products(
 
   Method for global testing in product models. Options: `"lrt"`
   (likelihood ratio test) or `"wald"` (Wald-style smooth term test).
-  Default is `"wald"`.
+  Default is `"lrt"`.
+
+- critical_value:
+
+  The critical value for constructing confidence intervals. Default is
+  0.05 (for 95% confidence intervals).
 
 - return_models:
 

@@ -8,15 +8,17 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/chexjiang/spCorr/blob/HEAD/DESCRIPTION)
+[`inst/CITATION`](https://github.com/chexjiang/spCorr/blob/HEAD/inst/CITATION)
 
-Jiang C (2026). *spCorr: flexible and scalable inference of spatially
-varying correlation in spatial transcriptomics*.
-https://chexjiang.github.io/spCorr, https://github.com/chexjiang/spCorr.
+Jiang C, Yin Y, Robson P, Li Y, Li J, Song D (2026). “Flexible and
+scalable inference of spatially varying correlation in spatial
+transcriptomics with spCorr.” *Genome Research*.
+[doi:10.1101/gr.281559.125](https://doi.org/10.1101/gr.281559.125).
 
-    @Manual{,
-      title = {spCorr: flexible and scalable inference of spatially varying correlation in spatial transcriptomics},
-      author = {Chenxin (Flora) Jiang},
+    @Article{,
+      title = {Flexible and scalable inference of spatially varying correlation in spatial transcriptomics with spCorr},
+      author = {Chenxin Flora Jiang and Yuxin Yin and Paul Robson and Yuanhao James Li and Jingyi Jessica Li and Dongyuan Song},
+      journal = {Genome Research},
       year = {2026},
-      note = {https://chexjiang.github.io/spCorr, https://github.com/chexjiang/spCorr},
+      doi = {10.1101/gr.281559.125},
     }

@@ -23,7 +23,7 @@ spCorr(
   return_coefs = FALSE,
   return_pi = FALSE,
   check_morani = FALSE,
-  preconstruct_smoother = TRUE,
+  preconstruct_smoother = FALSE,
   ncores = 2,
   control = list(),
   epsilon = 1e-06,
@@ -91,6 +91,11 @@ spCorr(
 
   Logical; if `TRUE`, returns model coefficients and variances. Default
   is `FALSE`.
+
+- return_pi:
+
+  Logical; if `TRUE`, returns predicted intervals for fitted
+  correlations. Default is `FALSE`.
 
 - check_morani:
 
@@ -188,6 +193,7 @@ result <- spCorr(
   global_test = "lrt",
   return_models = FALSE,
   return_coefs = FALSE,
+  return_pi = FALSE,
   check_morani = FALSE,
   preconstruct_smoother = TRUE,
   ncores = 2,
@@ -197,5 +203,4 @@ result <- spCorr(
 )
 #> Start Marginal Fitting for 20 genes
 #> Start Cross-Product Fitting for 10 gene pairs
-#> Warning: all scheduled cores encountered errors in user code
 ```

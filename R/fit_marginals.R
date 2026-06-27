@@ -60,10 +60,10 @@ fit_marginals <- function(gene_list,
         )
       },
       error = function(e) {
-        message("Gene failed: ", gene)
-        stop(e)
-        # message("  Error: ", e$message)
-        # return(NULL) # Return NULL if an error occurs
+        # message("Gene failed: ", gene)
+        # stop(e)
+        message("  Error: ", e$message)
+        return(NULL) # Return NULL if an error occurs
       }
     )
   }, mc.cores = ncores)

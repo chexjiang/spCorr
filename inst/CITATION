@@ -1,0 +1,15 @@
+bibentry(
+  bibtype = "Article",
+  title = "Flexible and scalable inference of spatially varying correlation in spatial transcriptomics with spCorr",
+  author = c(
+    person("Chenxin Flora", "Jiang"),
+    person("Yuxin", "Yin"),
+    person("Paul", "Robson"),
+    person("Yuanhao James", "Li"),
+    person("Jingyi Jessica", "Li"),
+    person("Dongyuan", "Song")
+  ),
+  journal = "Genome Research",
+  year = "2026",
+  doi = "10.1101/gr.281559.125"
+)

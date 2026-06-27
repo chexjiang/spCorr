@@ -6,6 +6,7 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(viridis)
+library(utils)
 ```
 
 ## Introduction
@@ -103,15 +104,8 @@ res <- spCorr(counts,
   gene_pair_list,
   cov_mat,
   formula1 = "tumor_annotations",
-  family1 = "nb",
   formula2 = "s(x1, x2, bs='tp', k=30)",
-  family2 = quasiproductr(),
-  DT = TRUE,
-  global_test = "lrt",
-  return_models = FALSE,
-  return_coefs = FALSE,
   return_pi = TRUE,
-  check_morani = FALSE,
   preconstruct_smoother = FALSE,
   ncores = 10,
   seed = 123
@@ -123,18 +117,18 @@ res <- spCorr(counts,
 ``` r
 str(res, max.level = 1)
 #> List of 7
-#>  $ pval        : Named num [1:1316] 0.4846 0.0531 0.1004 0.4881 0.1349 ...
+#>  $ pval        : Named num [1:1316] 0.3987 0.0218 0.1269 0.6714 0.1893 ...
 #>   ..- attr(*, "names")= chr [1:1316] "AATF_CDKN1A" "AATF_MYC" "ABL1_BAX" "ABL1_CCND2" ...
-#>  $ fdr         : Named num [1:1316] 0.653 0.344 0.402 0.653 0.441 ...
+#>  $ fdr         : Named num [1:1316] 0.605 0.219 0.427 0.747 0.474 ...
 #>   ..- attr(*, "names")= chr [1:1316] "AATF_CDKN1A" "AATF_MYC" "ABL1_BAX" "ABL1_CCND2" ...
-#>  $ edf         : Named num [1:1316] 13.44 11.79 6.13 3 16.3 ...
+#>  $ edf         : Named num [1:1316] 9.76 16.65 20.72 9.4 17.1 ...
 #>   ..- attr(*, "names")= chr [1:1316] "AATF_CDKN1A" "AATF_MYC" "ABL1_BAX" "ABL1_CCND2" ...
-#>  $ res_local   : num [1:1316, 1:1747] -0.0325 0.1619 0.1598 -0.0467 0.0629 ...
+#>  $ res_local   : num [1:1316, 1:1747] 0.03354 0.03259 -0.06325 -0.00679 0.02372 ...
 #>   ..- attr(*, "dimnames")=List of 2
 #>  $ res_local_pi:List of 1316
-#>  $ residuals   : num [1:601, 1:1747] 0.1008 0.5443 0.0936 0.1168 0.0915 ...
+#>  $ residuals   : num [1:601, 1:1747] 0.1961 0.4258 0.0361 0.6751 0.2918 ...
 #>   ..- attr(*, "dimnames")=List of 2
-#>  $ marginals   : num [1:601, 1:1747] -1.277 0.111 -1.319 -1.191 -1.332 ...
+#>  $ marginals   : num [1:601, 1:1747] -0.856 -0.187 -1.798 0.454 -0.548 ...
 #>   ..- attr(*, "dimnames")=List of 2
 ```
 
@@ -181,7 +175,7 @@ BH-adjusted *p*-values from the SVC testing are stored in `res$fdr`.
 pval_svc <- res$fdr
 gene_pair_sig <- which(pval_svc < 0.05)
 cat("Number of gene pairs with significant SVC patterns (FDR < 0.05):", length(gene_pair_sig), "\n")
-#> Number of gene pairs with significant SVC patterns (FDR < 0.05): 43
+#> Number of gene pairs with significant SVC patterns (FDR < 0.05): 44
 ```
 
 ## Session information
@@ -212,23 +206,23 @@ sessionInfo()
 #> [5] ggplot2_4.0.1     spCorr_0.0.0.9000 BiocStyle_2.26.0 
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] tidyselect_1.2.1    xfun_0.55           bslib_0.9.0        
-#>  [4] purrr_1.2.0         splines_4.2.3       lattice_0.22-6     
-#>  [7] vctrs_0.7.0         generics_0.1.4      htmltools_0.5.9    
+#>  [1] tidyselect_1.2.1    xfun_0.56           bslib_0.10.0       
+#>  [4] purrr_1.2.1         splines_4.2.3       lattice_0.22-6     
+#>  [7] vctrs_0.7.1         generics_0.1.4      htmltools_0.5.9    
 #> [10] yaml_2.3.12         mgcv_1.9-3          rlang_1.1.7        
 #> [13] pkgdown_2.2.0       jquerylib_0.1.4     pillar_1.11.1      
-#> [16] glue_1.8.0          withr_3.0.2         RColorBrewer_1.1-3 
+#> [16] glue_1.8.1          withr_3.0.2         RColorBrewer_1.1-3 
 #> [19] S7_0.2.1            lifecycle_1.0.5     gtable_0.3.6       
 #> [22] ragg_1.5.0          htmlwidgets_1.6.4   evaluate_1.0.5     
 #> [25] labeling_0.4.3      knitr_1.51          fastmap_1.2.0      
 #> [28] parallel_4.2.3      Rcpp_1.1.1          scales_1.4.0       
 #> [31] BiocManager_1.30.27 cachem_1.1.0        desc_1.4.3         
 #> [34] jsonlite_2.0.0      farver_2.1.2        otel_0.2.0         
-#> [37] systemfonts_1.3.1   fs_1.6.6            gridExtra_2.3      
+#> [37] systemfonts_1.3.1   fs_2.1.0            gridExtra_2.3      
 #> [40] textshaping_1.0.4   digest_0.6.39       bookdown_0.46      
-#> [43] grid_4.2.3          cli_3.6.5           tools_4.2.3        
+#> [43] grid_4.2.3          cli_3.6.6           tools_4.2.3        
 #> [46] magrittr_2.0.4      sass_0.4.10         tibble_3.3.1       
 #> [49] dichromat_2.0-0.1   ape_5.8-1           pkgconfig_2.0.3    
-#> [52] Matrix_1.6-5        rmarkdown_2.30      rstudioapi_0.17.1  
+#> [52] Matrix_1.6-5        rmarkdown_2.30      rstudioapi_0.18.0  
 #> [55] R6_2.6.1            nlme_3.1-164        compiler_4.2.3
 ```

@@ -30,11 +30,11 @@ spCorr <- function(count_mat,
                    formula2 = "s(x1, x2, bs='tp', k=50)",
                    family2 = quasiproductr(),
                    DT = TRUE,
-                   global_test = "wald",
+                   global_test = "lrt",
                    return_models = FALSE,
                    return_coefs = FALSE,
                    check_morani = FALSE,
-                   preconstruct_smoother = TRUE,
+                   preconstruct_smoother = FALSE,
                    ncores = 2,
                    control = list(),
                    epsilon = 1e-6,
@@ -64,7 +64,7 @@ The parameters of `spCorr()` are:
 
 - `DT`: Logical; if `TRUE`, applies a discrete transformation suitable for count data. Default is `TRUE`.
 
-- `global_test`: Method for global testing in product models. Options: `"lrt"` (likelihood ratio test) or `"wald"` (Wald-style smooth term test). Default is `"wald"`.
+- `global_test`: Method for global testing in product models. Options: `"lrt"` (likelihood ratio test) or `"wald"` (Wald-style smooth term test). Default is `"lrt"`.
 
 - `return_models`: Logical; if `TRUE`, return full GAM model objects. Default is `FALSE`.
 
@@ -72,7 +72,7 @@ The parameters of `spCorr()` are:
 
 - `check_morani`: Logical; if `TRUE`, filters gene pairs using Moran's I on the product. Default is `FALSE`.
 
-- `preconstruct_smoother`: Logical; if `TRUE`, replaces `bs='tp'`/`'gp'` with `tpcached`/`gpcached` for faster computation. Default is `TRUE`.
+- `preconstruct_smoother`: Logical; if `TRUE`, replaces `bs='tp'`/`bs='gp'` with cached smoothers for faster computation. Default is `FALSE`.
 
 - `ncores`: Integer number of cores for parallel processing. Default is `2`.
 
@@ -91,8 +91,12 @@ The tutorials demonstrate the main functionalities of **spCorr**, including spot
 
 - [**Tutorial 1:** Modeling spatially varying gene correlation across 2D space](https://chexjiang.github.io/spCorr/articles/spCorr-2D.html)
 
+- [**Tutorial 2:** Modeling spatially varying gene correlation across 1D curve](https://chexjiang.github.io/spCorr/articles/spCorr-1D.html)
 
 
-## Related Paper<a name="related-paper"></a>
 
-[Jiang, C., Yin, Y., Robson, P., Li, J. Y., Li, J. J., & Song, D. (2025).  spCorr: flexible and scalable inference of spatially varying correlation in spatial transcriptomics. *bioRxiv*, 2025-09.](https://www.biorxiv.org/content/10.1101/2025.09.30.679684v1)
+## Paper<a name="related-paper"></a>
+
+If you use **spCorr** in your research, please cite:
+
+[Jiang, C. F., Yin, Y., Robson, P., Li, J. Y., Li, J. J., & Song, D. Flexible and scalable inference of spatially varying correlation in spatial transcriptomics with spCorr. *Genome Research* (2026).](https://doi.org/10.1101/gr.281559.125) 

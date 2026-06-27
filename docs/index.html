@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">spCorr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.0000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorials" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorials</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials">
 <li><a class="dropdown-item" href="articles/spCorr-2D.html">Modeling spatially varying gene correlation across 2D space</a></li>
+    <li><a class="dropdown-item" href="articles/spCorr-1D.html">Modeling spatially varying gene correlation across 1D curve</a></li>
   </ul>
 </li>
       </ul>
@@ -77,11 +78,11 @@
 <span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>                   <span class="at">formula2 =</span> <span class="st">"s(x1, x2, bs='tp', k=50)"</span>,</span>
 <span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>                   <span class="at">family2 =</span> <span class="fu">quasiproductr</span>(),</span>
 <span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>                   <span class="at">DT =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>                   <span class="at">global_test =</span> <span class="st">"wald"</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>                   <span class="at">global_test =</span> <span class="st">"lrt"</span>,</span>
 <span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>                   <span class="at">return_models =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>                   <span class="at">return_coefs =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>                   <span class="at">check_morani =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>                   <span class="at">preconstruct_smoother =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>                   <span class="at">preconstruct_smoother =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>                   <span class="at">ncores =</span> <span class="dv">2</span>,</span>
 <span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>                   <span class="at">control =</span> <span class="fu">list</span>(),</span>
 <span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>                   <span class="at">epsilon =</span> <span class="fl">1e-6</span>,</span>
@@ -110,11 +111,11 @@
 </li>
 <li><p><code>family2</code>: The distribution family for the product model. Default is <code><a href="reference/quasiproductr.html">quasiproductr()</a></code>.</p></li>
 <li><p><code>DT</code>: Logical; if <code>TRUE</code>, applies a discrete transformation suitable for count data. Default is <code>TRUE</code>.</p></li>
-<li><p><code>global_test</code>: Method for global testing in product models. Options: <code>"lrt"</code> (likelihood ratio test) or <code>"wald"</code> (Wald-style smooth term test). Default is <code>"wald"</code>.</p></li>
+<li><p><code>global_test</code>: Method for global testing in product models. Options: <code>"lrt"</code> (likelihood ratio test) or <code>"wald"</code> (Wald-style smooth term test). Default is <code>"lrt"</code>.</p></li>
 <li><p><code>return_models</code>: Logical; if <code>TRUE</code>, return full GAM model objects. Default is <code>FALSE</code>.</p></li>
 <li><p><code>return_coefs</code> Logical; if <code>TRUE</code>, return model coefficients and covariance matrices. Default is <code>FALSE</code>.</p></li>
 <li><p><code>check_morani</code>: Logical; if <code>TRUE</code>, filters gene pairs using Moran’s I on the product. Default is <code>FALSE</code>.</p></li>
-<li><p><code>preconstruct_smoother</code>: Logical; if <code>TRUE</code>, replaces <code>bs='tp'</code>/<code>'gp'</code> with <code>tpcached</code>/<code>gpcached</code> for faster computation. Default is <code>TRUE</code>.</p></li>
+<li><p><code>preconstruct_smoother</code>: Logical; if <code>TRUE</code>, replaces <code>bs='tp'</code>/<code>bs='gp'</code> with cached smoothers for faster computation. Default is <code>FALSE</code>.</p></li>
 <li><p><code>ncores</code>: Integer number of cores for parallel processing. Default is <code>2</code>.</p></li>
 <li><p><code>control</code>: A list of control parameters passed to <code><a href="https://rdrr.io/pkg/mgcv/man/gam.html" class="external-link">mgcv::gam()</a></code> during product fitting.</p></li>
 <li><p><code>epsilon</code>: A small constant to avoid boundary issues in the uniform-to-Gaussian transformation. Default is <code>1e-6</code>.</p></li>
@@ -128,14 +129,16 @@
 <p>For all detailed tutorials, please check the <a href="https://chexjiang.github.io/spCorr/"><strong>website</strong></a>.<br>
 The tutorials demonstrate the main functionalities of <strong>spCorr</strong>, including spot-level correlation inference and the identification of spatially varying correlation (SVC) patterns.</p>
 <ul>
-<li><a href="https://chexjiang.github.io/spCorr/articles/spCorr-2D.html"><strong>Tutorial 1:</strong> Modeling spatially varying gene correlation across 2D space</a></li>
+<li><p><a href="https://chexjiang.github.io/spCorr/articles/spCorr-2D.html"><strong>Tutorial 1:</strong> Modeling spatially varying gene correlation across 2D space</a></p></li>
+<li><p><a href="https://chexjiang.github.io/spCorr/articles/spCorr-1D.html"><strong>Tutorial 2:</strong> Modeling spatially varying gene correlation across 1D curve</a></p></li>
 </ul>
 </div>
 <div class="section level2">
-<h2 id="related-paper">Related Paper<a name="related-paper"></a>
-<a class="anchor" aria-label="anchor" href="#related-paper"></a>
+<h2 id="paper">Paper<a name="related-paper"></a>
+<a class="anchor" aria-label="anchor" href="#paper"></a>
 </h2>
-<p><a href="https://www.biorxiv.org/content/10.1101/2025.09.30.679684v1" class="external-link">Jiang, C., Yin, Y., Robson, P., Li, J. Y., Li, J. J., &amp; Song, D. (2025). spCorr: flexible and scalable inference of spatially varying correlation in spatial transcriptomics. <em>bioRxiv</em>, 2025-09.</a></p>
+<p>If you use <strong>spCorr</strong> in your research, please cite:</p>
+<p><a href="https://doi.org/10.1101/gr.281559.125" class="external-link">Jiang, C. F., Yin, Y., Robson, P., Li, J. Y., Li, J. J., &amp; Song, D. Flexible and scalable inference of spatially varying correlation in spatial transcriptomics with spCorr. <em>Genome Research</em> (2026).</a></p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

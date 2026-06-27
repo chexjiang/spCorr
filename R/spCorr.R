@@ -23,6 +23,7 @@
 #' @param global_test Method for global testing in product models. Options: `"lrt"` (likelihood ratio test) or `"wald"` (Wald-style smooth term test). Default is `"wald"`.
 #' @param return_models Logical; if `TRUE`, returns full GAM model objects for each gene pair. Default is `FALSE`.
 #' @param return_coefs Logical; if `TRUE`, returns model coefficients and variances. Default is `FALSE`.
+#' @param return_pi Logical; if `TRUE`, returns predicted intervals for fitted correlations. Default is `FALSE`.
 #' @param check_morani Logical; if `TRUE`, filters gene pairs using Moran's I on the product. Default is `FALSE`.
 #' @param preconstruct_smoother Logical; if `TRUE`, replaces `bs='tp'`/`'gp'` with `tpcached`/`gpcached` for faster computation. Default is `TRUE`.
 #' @param ncores Integer number of cores for parallel processing. Default is `2`.
@@ -55,6 +56,7 @@
 #'   global_test = "lrt",
 #'   return_models = FALSE,
 #'   return_coefs = FALSE,
+#'   return_pi = FALSE,
 #'   check_morani = FALSE,
 #'   preconstruct_smoother = TRUE,
 #'   ncores = 2,
@@ -65,6 +67,7 @@
 #' @seealso [fit_marginals()], [check_products()], [fit_products()]
 #' @importFrom mgcv gam
 #' @importFrom parallel mclapply
+#' @importFrom stats anova as.formula coef make.link p.adjust predict qcauchy vcov
 #' @export
 spCorr <- function(count_mat,
                    gene_list,
@@ -80,7 +83,7 @@ spCorr <- function(count_mat,
                    return_coefs = FALSE,
                    return_pi = FALSE,
                    check_morani = FALSE,
-                   preconstruct_smoother = TRUE,
+                   preconstruct_smoother = FALSE,
                    ncores = 2,
                    control = list(),
                    epsilon = 1e-6,
@@ -109,7 +112,7 @@ spCorr <- function(count_mat,
     count_mat = count_mat,
     cov_mat = cov_mat,
     formula1 = formula1,
-    family = family1,
+    family1 = family1,
     DT = DT,
     ncores = ncores,
     seed = seed
