@@ -2,7 +2,7 @@
 
 The R package **spCorr** is a flexible and scalable framework for detecting and characterizing **spatially varying correlations (SVCs)** in spatial transcriptomics data. It provides (1) spot-level correlation estimates between gene pairs and (2) identifies gene pairs whose correlations vary across space or between tissue domains. The spCorr supports flexible modeling of spot-level covariates, directly models count data, and enables efficient, permutation-free statistical inference. The following figure illustrates the workflow of spCorr:
 
-![](man/figures/fig1.jpg)
+![Workflow of spCorr](man/figures/fig1.jpg)
 
 
 ## Installation<a name="installation-"></a>
@@ -89,9 +89,9 @@ The parameters of `spCorr()` are:
 For all detailed tutorials, please check the [**website**](https://chexjiang.github.io/spCorr/).  
 The tutorials demonstrate the main functionalities of **spCorr**, including spot-level correlation inference and the identification of spatially varying correlation (SVC) patterns.
 
-- [**Tutorial 1:** Modeling spatially varying gene correlation across 2D space](https://chexjiang.github.io/spCorr/articles/spCorr-2D.html)
+- [**Tutorial 1:** Modeling spatially varying gene correlation across 2D space](articles/spCorr-2D.html)
 
-- [**Tutorial 2:** Modeling spatially varying gene correlation across 1D curve](https://chexjiang.github.io/spCorr/articles/spCorr-1D.html)
+- [**Tutorial 2:** Modeling spatially varying gene correlation across 1D curve](articles/spCorr-1D.html)
 
 
 

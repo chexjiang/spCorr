@@ -57,8 +57,8 @@ cov_mat <- cbind(GetTissueCoordinates(xenium_sub.obj), xenium_sub.obj@meta.data)
 rownames(cov_mat) <- colnames(count_mat)
 ```
 
-Next we will use **MorphoGAM** [Nicol *et al.*,
-2024](https://doi.org/10.1101/2024.11.21.624653) to find the 1D spatial
+Next we will use **MorphoGAM** ([Nicol *et al.*,
+2024](https://doi.org/10.1101/2024.11.21.624653)) to find the 1D spatial
 curve associated with the 2D spatial coordinates of the spots. The 1D
 curve will be used as a covariate in the **spCorr** analysis.
 
@@ -187,7 +187,7 @@ sessionInfo()
 #> other attached packages:
 #>  [1] MorphoGAM_1.0.0    viridis_0.6.5      viridisLite_0.4.2  tidyr_1.3.2       
 #>  [5] dplyr_1.1.4        ggplot2_4.0.1      tibble_3.3.1       purrr_1.2.1       
-#>  [9] Seurat_5.4.0       SeuratObject_5.3.0 sp_2.2-0           spCorr_0.0.0.9000 
+#>  [9] Seurat_5.4.0       SeuratObject_5.3.0 sp_2.2-0           spCorr_1.0.0.0000 
 #> [13] BiocStyle_2.26.0  
 #> 
 #> loaded via a namespace (and not attached):
