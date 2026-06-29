@@ -9,7 +9,7 @@ supports flexible modeling of spot-level covariates, directly models
 count data, and enables efficient, permutation-free statistical
 inference. The following figure illustrates the workflow of spCorr:
 
-![Workflow of spCorr](reference/figures/fig1.jpg)
+![Workflow of spCorr](figures/fig1.jpg)
 
 Workflow of spCorr
 
@@ -47,6 +47,7 @@ spCorr <- function(count_mat,
                    return_coefs = FALSE,
                    check_morani = FALSE,
                    preconstruct_smoother = FALSE,
+                   return_pi = FALSE,
                    ncores = 2,
                    control = list(),
                    epsilon = 1e-6,
@@ -103,6 +104,9 @@ are:
 - `return_coefs` Logical; if `TRUE`, return model coefficients and
   covariance matrices. Default is `FALSE`.
 
+- `return_pi`: Logical; if `TRUE`, returns predicted intervals for
+  fitted correlations. Default is `FALSE`.
+
 - `check_morani`: Logical; if `TRUE`, filters gene pairs using Moran’s I
   on the product. Default is `FALSE`.
 
@@ -131,10 +135,15 @@ including spot-level correlation inference and the identification of
 spatially varying correlation (SVC) patterns.
 
 - [**Tutorial 1:** Modeling spatially varying gene correlation across 2D
-  space](https://chexjiang.github.io/spCorr/articles/spCorr-2D.md)
+  space](https://chexjiang.github.io/spCorr/articles/spCorr-2D.html)
 
-- [**Tutorial 2:** Modeling spatially varying gene correlation across 1D
-  curve](https://chexjiang.github.io/spCorr/articles/spCorr-1D.md)
+- [**Tutorial 2:** Modeling spatially varying gene correlation along 1D
+  spatial
+  curve](https://chexjiang.github.io/spCorr/articles/spCorr-1D.html)
+
+- [**Tutorial 3:** Modeling spatially varying gene correlation across
+  spatial
+  domains](https://chexjiang.github.io/spCorr/articles/spCorr-domain.html)
 
 ## Paper
 
@@ -172,7 +181,9 @@ spatial transcriptomics with spCorr. *Genome Research*
 
 ### All vignettes
 
-- [Modeling spatially varying gene correlation across 1D
+- [Modeling spatially varying gene correlation along 1D spatial
   curve](https://chexjiang.github.io/spCorr/articles/spCorr-1D.md):
 - [Modeling spatially varying gene correlation across 2D
   space](https://chexjiang.github.io/spCorr/articles/spCorr-2D.md):
+- [Modeling spatially varying gene correlation across spatial
+  domains](https://chexjiang.github.io/spCorr/articles/spCorr-domain.md):

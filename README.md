@@ -95,7 +95,9 @@ The tutorials demonstrate the main functionalities of **spCorr**, including spot
 
 - [**Tutorial 1:** Modeling spatially varying gene correlation across 2D space](https://chexjiang.github.io/spCorr/articles/spCorr-2D.html)
 
-- [**Tutorial 2:** Modeling spatially varying gene correlation across 1D curve](https://chexjiang.github.io/spCorr/articles/spCorr-1D.html)
+- [**Tutorial 2:** Modeling spatially varying gene correlation along 1D spatial curve](https://chexjiang.github.io/spCorr/articles/spCorr-1D.html)
+
+- [**Tutorial 3:** Modeling spatially varying gene correlation across spatial domains](https://chexjiang.github.io/spCorr/articles/spCorr-domain.html)
 
 
 

@@ -89,8 +89,6 @@ res <- spCorr(counts,
   cov_mat,
   formula1 = "tumor_annotations",
   formula2 = "s(x1, x2, bs='tp', k=30)",
-  return_pi = TRUE,
-  preconstruct_smoother = FALSE,
   ncores = 10,
   seed = 123
 )

@@ -36,7 +36,8 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-tutorials" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Tutorials</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-tutorials">
 <li><a class="dropdown-item" href="articles/spCorr-2D.html">Modeling spatially varying gene correlation across 2D space</a></li>
-    <li><a class="dropdown-item" href="articles/spCorr-1D.html">Modeling spatially varying gene correlation across 1D curve</a></li>
+    <li><a class="dropdown-item" href="articles/spCorr-1D.html">Modeling spatially varying gene correlation across 1D spatial curve</a></li>
+    <li><a class="dropdown-item" href="articles/spCorr-domain.html">Modeling spatially varying gene correlation across spatial domains</a></li>
   </ul>
 </li>
       </ul>
@@ -54,7 +55,7 @@
 </h1></div>
 <p>The R package <strong>spCorr</strong> is a flexible and scalable framework for detecting and characterizing <strong>spatially varying correlations (SVCs)</strong> in spatial transcriptomics data. It provides (1) spot-level correlation estimates between gene pairs and (2) identifies gene pairs whose correlations vary across space or between tissue domains. The spCorr supports flexible modeling of spot-level covariates, directly models count data, and enables efficient, permutation-free statistical inference. The following figure illustrates the workflow of spCorr:</p>
 <div class="float">
-<img src="reference/figures/fig1.jpg" alt="Workflow of spCorr"><div class="figcaption">Workflow of spCorr</div>
+<img src="figures/fig1.jpg" alt="Workflow of spCorr"><div class="figcaption">Workflow of spCorr</div>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a name="installation-"></a>
@@ -85,10 +86,11 @@
 <span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>                   <span class="at">return_coefs =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>                   <span class="at">check_morani =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>                   <span class="at">preconstruct_smoother =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>                   <span class="at">ncores =</span> <span class="dv">2</span>,</span>
-<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>                   <span class="at">control =</span> <span class="fu">list</span>(),</span>
-<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>                   <span class="at">epsilon =</span> <span class="fl">1e-6</span>,</span>
-<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>                   <span class="at">seed =</span> <span class="dv">123</span>)</span></code></pre></div>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>                   <span class="at">return_pi =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>                   <span class="at">ncores =</span> <span class="dv">2</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>                   <span class="at">control =</span> <span class="fu">list</span>(),</span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>                   <span class="at">epsilon =</span> <span class="fl">1e-6</span>,</span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>                   <span class="at">seed =</span> <span class="dv">123</span>)</span></code></pre></div>
 <p>The parameters of <code><a href="reference/spCorr.html">spCorr()</a></code> are:</p>
 <ul>
 <li><p><code>count_mat</code>: A matrix of counts where rows represent genes and columns represent observations.</p></li>
@@ -116,6 +118,7 @@
 <li><p><code>global_test</code>: Method for global testing in product models. Options: <code>"lrt"</code> (likelihood ratio test) or <code>"wald"</code> (Wald-style smooth term test). Default is <code>"lrt"</code>.</p></li>
 <li><p><code>return_models</code>: Logical; if <code>TRUE</code>, return full GAM model objects. Default is <code>FALSE</code>.</p></li>
 <li><p><code>return_coefs</code> Logical; if <code>TRUE</code>, return model coefficients and covariance matrices. Default is <code>FALSE</code>.</p></li>
+<li><p><code>return_pi</code>: Logical; if <code>TRUE</code>, returns predicted intervals for fitted correlations. Default is <code>FALSE</code>.</p></li>
 <li><p><code>check_morani</code>: Logical; if <code>TRUE</code>, filters gene pairs using Moran’s I on the product. Default is <code>FALSE</code>.</p></li>
 <li><p><code>preconstruct_smoother</code>: Logical; if <code>TRUE</code>, replaces <code>bs='tp'</code>/<code>bs='gp'</code> with cached smoothers for faster computation. Default is <code>FALSE</code>.</p></li>
 <li><p><code>ncores</code>: Integer number of cores for parallel processing. Default is <code>2</code>.</p></li>
@@ -131,8 +134,9 @@
 <p>For all detailed tutorials, please check the <a href="https://chexjiang.github.io/spCorr/"><strong>website</strong></a>.<br>
 The tutorials demonstrate the main functionalities of <strong>spCorr</strong>, including spot-level correlation inference and the identification of spatially varying correlation (SVC) patterns.</p>
 <ul>
-<li><p><a href="articles/spCorr-2D.html"><strong>Tutorial 1:</strong> Modeling spatially varying gene correlation across 2D space</a></p></li>
-<li><p><a href="articles/spCorr-1D.html"><strong>Tutorial 2:</strong> Modeling spatially varying gene correlation across 1D curve</a></p></li>
+<li><p><a href="https://chexjiang.github.io/spCorr/articles/spCorr-2D.html"><strong>Tutorial 1:</strong> Modeling spatially varying gene correlation across 2D space</a></p></li>
+<li><p><a href="https://chexjiang.github.io/spCorr/articles/spCorr-1D.html"><strong>Tutorial 2:</strong> Modeling spatially varying gene correlation along 1D spatial curve</a></p></li>
+<li><p><a href="https://chexjiang.github.io/spCorr/articles/spCorr-domain.html"><strong>Tutorial 3:</strong> Modeling spatially varying gene correlation across spatial domains</a></p></li>
 </ul>
 </div>
 <div class="section level2">

@@ -17,8 +17,10 @@ navbar:
       menu:
         - text: "Modeling spatially varying gene correlation across 2D space"
           href: articles/spCorr-2D.html
-        - text: "Modeling spatially varying gene correlation across 1D curve"
+        - text: "Modeling spatially varying gene correlation across 1D spatial curve"
           href: articles/spCorr-1D.html
+        - text: "Modeling spatially varying gene correlation across spatial domains"
+          href: articles/spCorr-domain.html
     github:
       icon: fab fa-github
       href: https://github.com/chexjiang/spCorr

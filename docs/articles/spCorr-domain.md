@@ -1,4 +1,4 @@
-# Modeling spatially varying gene correlation along 1D spatial curve
+# Modeling spatially varying gene correlation across spatial domains
 
 ``` r
 library(spCorr)
@@ -18,8 +18,8 @@ library(utils)
 
 This tutorial demonstrates how to use **spCorr** to (i) infer spot-level
 gene–gene correlations for specified gene pairs, and (ii) identify gene
-pairs exhibiting *spatially varying correlation (SVC)* patterns along a
-1D spatial curve.
+pairs exhibiting *spatially varying correlation (SVC)* patterns across
+spatial domains.
 
 ## Prepare input data
 
@@ -42,9 +42,9 @@ xenium.obj$ccf_region <- gsub("1|2/3|4|5|6a|6b", "", xenium.obj$ccf) %>%
   as.factor() %>%
   droplevels()
 
-# Subset celltype L2/3 IT
-celltype <- "L2/3 IT"
-xenium_sub.obj <- xenium.obj[, xenium.obj$ensembled.celltype1 %in% celltype]
+# Subset celltypes
+celltypes <- c("L2/3 IT", "L4", "L5 IT", "L5 PT", "L6 CT", "L6 IT", "L6b")
+xenium_sub.obj <- xenium.obj[, xenium.obj$ensembled.celltype1 %in% celltypes]
 ```
 
 Now we prepare the input data for **spCorr** analysis.
@@ -57,30 +57,26 @@ cov_mat <- cbind(GetTissueCoordinates(xenium_sub.obj), xenium_sub.obj@meta.data)
 rownames(cov_mat) <- colnames(count_mat)
 ```
 
-Next we will use **MorphoGAM** ([Nicol *et al.*,
-2024](https://doi.org/10.1101/2024.11.21.624653)) to find the 1D spatial
-curve associated with the 2D spatial coordinates of the spots. The 1D
-curve will be used as a covariate in the **spCorr** analysis.
+We extract the spatial domain information from the covariate matrix. The
+spatial domain information is based on the CCF region annotations
+provided in the Seurat object.
 
 ``` r
-# Use MorphoGAM to find the 1D spatial curve
-MorphoGAM_fit <- MorphoGAM::CurveFinder(cov_mat[, c("x", "y")] |> as.matrix(), knn = 5)
-cov_mat$t <- MorphoGAM_fit$xyt$t
-
-# (and plot)
-df <- MorphoGAM_fit$xyt %>% arrange(t)
-plot_curve <- ggplot(df, aes(x = x, y = y)) +
-  geom_point(color = "gray70") +
-  geom_path(aes(x = f1, y = f2, color = t)) +
-  labs(title = paste(celltype, ": 1D spatial curve from MorphoGAM")) +
-  scale_color_viridis_c(option = "magma") +
+plot_domain <- ggplot(cov_mat, aes(x = x, y = y, color = ensembled.celltype1)) +
+  geom_point(size = 0.4) +
+  labs(color = "Spatial domain") +
   coord_fixed() +
   scale_y_reverse() +
-  theme_minimal()
-plot_curve
+  theme_classic() +
+  theme(
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank()
+  )
+plot_domain
 ```
 
-![](spCorr-1D_files/figure-html/data_prepare2-1.png)
+![](spCorr-domain_files/figure-html/data_prepare2-1.png)
 
 In this tutorial, we will focus on a subset of 10 genes that are highly
 expressed in the L2/3 IT cell type. We will analyze all possible gene
@@ -96,7 +92,8 @@ rownames(gene_pair_list) <- apply(gene_pair_list, 1, paste0, collapse = "_")
 
 We now apply **spCorr** to infer spot-level gene–gene correlations for
 the selected gene pairs and to identify gene pairs with spatially
-varying correlation (SVC) pattern across the 1D spatial curve.
+varying correlation (SVC) pattern across the spatial domains (associated
+with the cell types `ensembled.celltype1`).
 
 ``` r
 res <- spCorr(count_mat,
@@ -104,7 +101,7 @@ res <- spCorr(count_mat,
   gene_pair_list,
   cov_mat,
   formula1 = "1",
-  formula2 = "s(t, bs='tp', k=8)",
+  formula2 = "ensembled.celltype1",
   return_pi = TRUE,
   ncores = 5,
   seed = 123
@@ -125,41 +122,36 @@ top_pairs <- names(sort(res$fdr))[1:6]
 # Assemble spot-level correlation estimates and their confidence intervals
 rho_df_long <- purrr::map_dfr(top_pairs, function(gp) {
   tibble::tibble(
-    t = cov_mat$t, gene_pair = gp,
-    rho = as.numeric(res$res_local[gp, ]),
-    rho_lower = as.numeric(res$res_local_pi[[gp]]$lower),
-    rho_upper = as.numeric(res$res_local_pi[[gp]]$upper)
+    x = cov_mat$x, y = cov_mat$y, gene_pair = gp,
+    rho = as.numeric(res$res_local[gp, ])
   )
 }) %>%
-  dplyr::mutate(
-    rho_lower = pmax(rho_lower, -1),
-    rho_upper = pmin(rho_upper, 1),
-    gene_pair = factor(gene_pair, levels = top_pairs)
-  ) %>%
-  dplyr::arrange(gene_pair, t)
+  dplyr::mutate(gene_pair = factor(gene_pair, levels = top_pairs))
 
-# Visualize the estimated spot-level correlations along the 1D spatial curve
-p_corr_t <- ggplot(rho_df_long, aes(x = t, y = rho)) +
-  geom_ribbon(aes(ymin = rho_lower, ymax = rho_upper, group = gene_pair), fill = "purple", alpha = 0.25, color = NA) +
-  geom_line(aes(group = gene_pair), color = "purple", linewidth = 0.6) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
+# Visualize the estimated spot-level correlations across 2D space
+p_corr_d <- ggplot(rho_df_long, aes(x = x, y = y, color = rho)) +
+  geom_point(size = 0.3) +
   facet_wrap(~gene_pair, nrow = 2) +
-  scale_x_continuous(breaks = c(0, 0.5, 1), labels = c("0", "0.5", "1")) +
-  scale_y_continuous(breaks = c(-1, 0, 1), limits = c(-1, 1)) +
-  labs(x = "t", y = "Correlation") +
+  coord_fixed() +
+  scale_y_reverse() +
+  scale_color_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0, limits = c(-1, 1), name = "Correlation") +
   theme_minimal() +
   theme(
-    aspect.ratio = 1 / 2,
-    legend.position = "none",
+    aspect.ratio = 1,
+    legend.position = "right",
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
     panel.grid = element_blank(),
     panel.border = element_rect(color = "black", fill = NA, linewidth = 0.2),
     strip.background = element_rect(color = "black", fill = NA, linewidth = 0.2),
     strip.text.x = element_text(face = "italic")
   )
-p_corr_t
+
+p_corr_d
 ```
 
-![](spCorr-1D_files/figure-html/p_corr_t-1.png)
+![](spCorr-domain_files/figure-html/p_corr_d-1.png)
 
 ## Session information
 
